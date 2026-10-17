@@ -1,0 +1,6 @@
+# MedGuardian additions on top of medagentbench/requirements.txt (Python 3.9 env)
+# Code must stay compatible with pydantic 1.10 (upstream pin) and pydantic 2.x.
+requests>=2.28
+pydantic>=1.10
+python-dotenv>=1.0
+pytest>=7.4
