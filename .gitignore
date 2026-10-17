@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+*.log
+
+# run outputs (keep the folder)
+outputs/*
+!outputs/.gitkeep
+
+# generated, key-bearing baseline configs
+baseline/configs/agents/*.generated.yaml
+
+# never commit the MedAgentBench grader
+refsol.py
+
+.idea/
+.vscode/
+.DS_Store
