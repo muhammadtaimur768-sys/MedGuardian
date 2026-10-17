@@ -117,9 +117,15 @@ the grader file and an API key.
    python eval/run_baseline.py setup
    python eval/run_baseline.py check
    ```
-4. Run the task server and the assigner using the commands printed by `python eval/run_baseline.py setup`
-   (`python -m src.start_task -a --config ...` and `python -m src.assigner --config ...` from inside
-   `medagentbench/`, with config files under `medagentbench/configs/`).
+4. Start the controller and one task worker (leave it running). Upstream `start_task` does not pass
+   `--config` to its workers, so our script starts them itself:
+   ```bash
+   python eval/run_baseline.py start
+   ```
+   Then, in a second terminal:
+   ```bash
+   cd medagentbench && python -m src.assigner --config configs/assignments/medguardian_gemini.yaml
+   ```
 5. Summarise the results:
    ```bash
    python eval/summarize_baseline.py   # writes eval/baseline_results.md
@@ -133,7 +139,8 @@ Numbers, model IDs, dates and per-case traces are in the results files:
   B0 (no renal check, requested dose given unchanged): 4/10. B1 (scripted tool chain): 10/10. B1 shares
   code with the tools, so it checks the tools against the hand-computed values; it is not an agent result.
 - [`eval/tool_augmented_results.md`](eval/tool_augmented_results.md): MedGuardian LLM agent on the seed cases.
-- [`eval/baseline_results.md`](eval/baseline_results.md): upstream MedAgentBench agent on a task subset,
+  `gemini-3.5-flash-lite`: 10/10, with the full tool chain on every case and about 4.5k prompt tokens per case.
+- [`eval/baseline_results.md`](eval/baseline_results.md): upstream MedAgentBench agent on a 30-task subset (pending),
   split into query vs action tasks (paper reference for Claude 3.5 Sonnet v2: query 85.33%, action 54.00%,
   overall 69.67%).
 
