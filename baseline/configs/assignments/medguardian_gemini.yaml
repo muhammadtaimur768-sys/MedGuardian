@@ -1,0 +1,25 @@
+# Overlay assignment config (copied to medagentbench/configs/assignments/ by setup).
+# Paths in `import:` are relative to medagentbench/configs/assignments/.
+definition:
+  task:
+    overwrite:
+      module: src.client.TaskClient
+      parameters:
+        controller_address: "http://localhost:5000/api"
+    import: ../tasks/medguardian_subset.yaml
+  agent:
+    import: ../agents/gemini-baseline.generated.yaml
+
+concurrency:
+  task:
+    medagentbench-subset: 1
+  agent:
+    gemini-baseline: 1
+
+assignments:
+  - agent:
+      - gemini-baseline
+    task:
+      - medagentbench-subset
+
+output: "outputs/MedAgentBenchv1"

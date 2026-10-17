@@ -1,0 +1,10 @@
+# Overlay start_task config (copied to medagentbench/configs/ by setup): 1 worker for the subset task.
+# Caveat: upstream start_task spawns `python -m src.server.task_worker <name>` WITHOUT --config, so a
+# spawned worker reads the default configs/tasks/task_assembly.yaml, which does not define
+# medagentbench-subset. Use `python3 eval/run_baseline.py start` instead: it starts the controller and
+# 1 worker with --config configs/tasks/medguardian_subset.yaml (same layout as this file).
+definition:
+  import: tasks/medguardian_subset.yaml
+
+start:
+  medagentbench-subset: 1

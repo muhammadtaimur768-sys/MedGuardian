@@ -1,0 +1,15 @@
+# Overlay task config (copied to medagentbench/configs/tasks/ by eval/run_baseline.py setup).
+# Same structure as upstream configs/tasks/medagentbench.yaml, but uses the 30-task stratified
+# subset (first 3 tasks of each of the 10 task types) written by the setup script.
+default:
+  module: src.server.tasks.medagentbench.MedAgentBench
+  parameters:
+    concurrency: 1
+    max_round: 8
+    fhir_api_base: "http://localhost:8080/fhir/"
+
+medagentbench-subset:
+  parameters:
+    name: medagentbench-subset
+    data_file: "data/medagentbench/medguardian_subset_30.json"
+    func_file: "data/medagentbench/funcs_v1.json"
