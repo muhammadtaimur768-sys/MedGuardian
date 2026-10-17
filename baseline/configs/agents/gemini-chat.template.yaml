@@ -1,0 +1,21 @@
+# Template for the upstream MedAgentBench HTTPAgent, pointed at Gemini's OpenAI-compatible API.
+# `python3 eval/run_baseline.py setup` fills __GEMINI_API_KEY__ and __LLM_MODEL__ from .env and writes
+# medagentbench/configs/agents/gemini-baseline.generated.yaml (key-bearing, never committed).
+gemini-baseline:
+  module: src.client.agents.HTTPAgent
+  parameters:
+    name: "gemini-baseline"
+    url: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+    headers:
+      Content-Type: application/json
+      Authorization: Bearer __GEMINI_API_KEY__
+    body:
+      model: "__LLM_MODEL__"
+      temperature: 0
+      max_tokens: 2048
+      reasoning_effort: low
+    prompter:
+      name: role_content_dict
+      args:
+        agent_role: assistant
+    return_format: "{response[choices][0][message][content]}"
