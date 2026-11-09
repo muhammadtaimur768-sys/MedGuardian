@@ -12,6 +12,9 @@ class MedGuardianConfig:
     # Gap 2 -- process guardian (arms of experiments/run_e4_g2.py)
     use_timeline_verifier: bool = True  # deterministic timeline audit (off -> the LLM reads the raw record)
     use_guideline_rag: bool = True      # BM25-retrieved guideline thresholds/excerpts
+    # Gap 3 -- sonography fusion (arms of experiments/run_e4_g3.py: image-only, dictation-only, fused)
+    use_image_ocr: bool = True          # caliper measurements read from the screenshot
+    use_dictation_asr: bool = True      # findings from Whisper transcript + template extraction
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> "MedGuardianConfig":
