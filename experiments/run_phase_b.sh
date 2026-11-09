@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 PY=.venv/bin/python
 R="$PY -m src.medguardian.runner"
-until [ -f results/e4_g3_test_summary.json ]; do sleep 30; done   # one LLM job at a time
+until grep -q "DEV V2 DONE" logs/queue_dev_v2.log 2>/dev/null; do sleep 30; done   # one LLM job at a time
 $R --config experiments/configs/e3_medguardian.yaml --split test --run-name e3_medguardian_test50
 for f in typed_tools calculator order_verifier; do
   $R --config experiments/configs/e5_no_$f.yaml --split dev --run-name e5_no_${f}_dev20

@@ -97,7 +97,7 @@ variables. Run on mains power with Low Power Mode off (see `docs/devlog.md`).
 | Experiment | Command (from the repo root, with `.venv/bin/python`) | Output |
 |---|---|---|
 | E0 runner fidelity | `-m src.medguardian.runner --config experiments/configs/e0_mistral.yaml --split test --per-category 2 --run-name e0_mistral_test20` | `results/e0_mistral_test20*` |
-| E1 non-agentic baseline | `-m src.medguardian.runner --config experiments/configs/e1_single_call.yaml --split test --run-name e1_single_call_test50` | `results/e1_*` |
+| E1 non-agentic baseline (fixed retrieval + one call) | `-m src.medguardian.runner --config experiments/configs/e1_single_call.yaml --split test --run-name e1_single_call_test50` | `results/e1_*` |
 | E2 base paper | `-m src.medguardian.runner --config experiments/configs/e2_basepaper.yaml --split test --run-name e2_basepaper_test50` | `results/e2_*` |
 | E3 MedGuardian | `-m src.medguardian.runner --config experiments/configs/e3_medguardian.yaml --split test --run-name e3_medguardian_test50` | `results/e3_*` |
 | E4-G1 | E3 vs E2 action SR (above) | |

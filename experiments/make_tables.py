@@ -84,7 +84,7 @@ def main_results():
         body.append("%s & reported & 300 & %.2f & -- & %.2f & %.2f" % (m, v["overall"], v["query"], v["action"]))
     body.append("\\midrule")
     runs = [("E0 Mistral-7B v0.3 (base-paper agent)", "e0_mistral_test20"),
-            ("E1 Qwen2.5-7B single call", "e1_single_call_test50"),
+            ("E1 Qwen2.5-7B retrieve-then-answer (non-agentic)", "e1_single_call_test50"),
             ("E2 Qwen2.5-7B base-paper agent", "e2_basepaper_test50"),
             ("E3 Qwen2.5-7B MedGuardian", "e3_medguardian_test50")]
     for label, run in runs:
