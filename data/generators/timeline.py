@@ -132,6 +132,32 @@ def make_case(i, rng, split):
             "gold": gold}
 
 
+BRANDS = {"apixaban": "Eliquis", "rivaroxaban": "Xarelto", "edoxaban": "Savaysa", "dabigatran": "Pradaxa",
+          "warfarin": "Coumadin", "clopidogrel": "Plavix"}
+STRENGTH = {"apixaban": "5 mg", "rivaroxaban": "20 mg", "edoxaban": "60 mg", "dabigatran": "150 mg",
+            "warfarin": "5 mg", "clopidogrel": "75 mg"}
+
+
+def messify(case, rng):
+    """Same case and gold labels, harder surface form (robustness set): brand-name or free-text
+    medication strings, and no explicit bleeding-risk label (it must be inferred from the procedure)."""
+    c = json.loads(json.dumps(case))
+    c["id"] = c["id"].replace("test_", "messy_")
+    drug = c["drug"]
+    style = rng.choice(["brand", "brand_upper", "generic_strength"])
+    text = {"brand": "%s %s tablet" % (BRANDS[drug], STRENGTH[drug]),
+            "brand_upper": "%s %s PO" % (BRANDS[drug].upper(), STRENGTH[drug].upper()),
+            "generic_strength": "%s %s oral" % (drug.capitalize(), STRENGTH[drug])}[style]
+    for e in c["bundle"]["entry"]:
+        r = e["resource"]
+        if r["resourceType"] == "MedicationAdministration":
+            r["medicationCodeableConcept"]["text"] = text
+        if r["resourceType"] == "Procedure":
+            r.pop("category", None)
+    c["surface"] = style
+    return c
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--n-test", type=int, default=30)
@@ -141,11 +167,16 @@ def main():
     for split, n, seed in (("dev", args.n_dev, 100), ("test", args.n_test, 0)):
         rng = random.Random(seed)
         cases = [make_case(i, rng, split) for i in range(n)]
-        with open(os.path.join(OUT_DIR, split + ".jsonl"), "w", encoding="utf-8") as fh:
-            for c in cases:
-                fh.write(json.dumps(c) + "\n")
-        n_viol = sum(bool(c["gold"]) for c in cases)
-        print("%s: %d cases, %d with violations, %d gold labels" % (split, n, n_viol, sum(len(c["gold"]) for c in cases)))
+        variants = [(split, cases)]
+        if split == "test":
+            mrng = random.Random(7)
+            variants.append(("test_messy", [messify(c, mrng) for c in cases]))
+        for name, cs in variants:
+            with open(os.path.join(OUT_DIR, name + ".jsonl"), "w", encoding="utf-8") as fh:
+                for c in cs:
+                    fh.write(json.dumps(c) + "\n")
+            n_viol = sum(bool(c["gold"]) for c in cs)
+            print("%s: %d cases, %d with violations, %d gold labels" % (name, n, n_viol, sum(len(c["gold"]) for c in cs)))
 
 
 if __name__ == "__main__":

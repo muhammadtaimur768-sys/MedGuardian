@@ -30,6 +30,28 @@ class GuidelineIndex:
         order = sorted(range(len(self.chunks)), key=lambda i: -scores[i])[:k]
         return [dict(self.chunks[i], score=float(scores[i])) for i in order]
 
+    def resolve_drug(self, text: str) -> Optional[str]:
+        """Map free medication text ("ELIQUIS 5 mg tablet", "apixaban") to the generic name the
+        corpus uses, via retrieval over the drug chunks (generic or brand name must appear)."""
+        toks = set(_tok(text))
+        for c in self.search(text + " stop before procedure", k=5):
+            f = c["facts"]
+            if f.get("kind") == "hold" and (f["drug"] in toks or toks & set(f.get("brand_names", []))):
+                return f["drug"]
+        return None
+
+    def bleeding_risk(self, procedure: str) -> Optional[Dict[str, Any]]:
+        """Classify a procedure's bleeding risk from the retrieved classification chunk."""
+        toks = set(_tok(procedure))
+        for c in self.search("bleeding risk classification " + procedure, k=len(self.chunks)):
+            f = c["facts"]
+            if f.get("kind") == "bleeding_risk":
+                for level in ("high", "low"):
+                    if toks & set(f["keywords"][level]):
+                        return {"level": level, "chunk": c, "inferred": True}
+                return {"level": f.get("default", "high"), "chunk": c, "inferred": True, "default": True}
+        return None
+
     def hold_rule(self, drug: str, crcl: Optional[float] = None) -> Optional[Dict[str, Any]]:
         q = "%s stop before procedure hold interruption last dose hours" % drug
         if drug == "dabigatran" and crcl is not None:

@@ -49,7 +49,8 @@ def _t(s: Optional[str]) -> Optional[datetime]:
         return None
 
 
-def build_timeline(bundle: Dict[str, Any]) -> Timeline:
+def build_timeline(bundle: Dict[str, Any], index: Optional[GuidelineIndex] = None) -> Timeline:
+    index = index or default_index()
     tl = Timeline()
     for e in bundle.get("entry", []):
         r = e.get("resource", {})
@@ -58,7 +59,8 @@ def build_timeline(bundle: Dict[str, Any]) -> Timeline:
             tl.mrn, tl.sex = r.get("id"), r.get("gender")
             tl.birth = _t(r.get("birthDate"))
         elif rt in ("MedicationAdministration", "MedicationRequest"):
-            drug = ((r.get("medicationCodeableConcept") or {}).get("text") or "").strip().lower()
+            raw = ((r.get("medicationCodeableConcept") or {}).get("text") or "").strip()
+            drug = index.resolve_drug(raw) or raw.lower()  # brand / free text -> generic via retrieval
             when = _t(r.get("effectiveDateTime") or r.get("authoredOn"))
             if drug and when:
                 tl.doses.setdefault(drug, []).append(when)
@@ -70,7 +72,11 @@ def build_timeline(bundle: Dict[str, Any]) -> Timeline:
         elif rt == "Procedure":
             tl.procedure = (r.get("code") or {}).get("text")
             cat = ((r.get("category") or {}).get("text") or "").lower()
-            tl.bleeding_risk = "high" if "high" in cat else "low"
+            if "high" in cat or "low" in cat:
+                tl.bleeding_risk = "high" if "high" in cat else "low"
+            else:  # no label in the record: classify the procedure from the retrieved guideline chunk
+                br = index.bleeding_risk(tl.procedure or "")
+                tl.bleeding_risk = br["level"] if br else "high"
             period = r.get("performedPeriod") or {}
             tl.start, tl.end = _t(period.get("start")), _t(period.get("end"))
     for v in tl.doses.values():
@@ -102,7 +108,7 @@ def _h(a: datetime, b: datetime) -> float:
 
 def audit(bundle: Dict[str, Any], index: Optional[GuidelineIndex] = None) -> List[Dict[str, Any]]:
     index = index or default_index()
-    tl = build_timeline(bundle)
+    tl = build_timeline(bundle, index)
     out: List[Discrepancy] = []
     if not tl.start:
         return []

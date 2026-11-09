@@ -175,6 +175,12 @@ def ablation():
         s = g2.get(arm) or {}
         body.append("G2: %s & \\multicolumn{3}{c}{F1 %s, P %s, R %s} & --" % (label, fmt(s.get("f1"), 2),
                                                                             fmt(s.get("precision"), 2), fmt(s.get("recall"), 2)))
+    gm = load_json("e4_g2_test_messy_summary.json") or {}
+    for arm, label in (("guardian", "messy records: guardian"), ("llm_rag", "messy records: LLM + RAG"),
+                       ("llm_only", "messy records: LLM only")):
+        s = gm.get(arm) or {}
+        body.append("G2: %s & \\multicolumn{3}{c}{F1 %s, P %s, R %s} & --" % (label, fmt(s.get("f1"), 2),
+                                                                            fmt(s.get("precision"), 2), fmt(s.get("recall"), 2)))
     g3 = load_json("e4_g3_test_summary.json") or {}
     for arm, label in (("fused", "fused"), ("dictation_only", "-- image OCR (dictation only)"),
                        ("image_only", "-- dictation ASR (image only)")):

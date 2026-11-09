@@ -104,3 +104,24 @@ def test_llm_output_parsing_is_tolerant():
     flags, ok = run_e4_g2.parse_flags('Here: [{"type": "hold_too_short", "item": "Apixaban"}, {"type": "bogus"}]')
     assert ok and flags == [{"type": "hold_too_short", "item": "apixaban"}]
     assert run_e4_g2.parse_flags("no json")[1] is False
+
+
+@pytest.mark.parametrize("text,generic", [("ELIQUIS 5 MG PO", "apixaban"), ("Xarelto 20 mg tablet", "rivaroxaban"),
+                                          ("Dabigatran 150 mg oral", "dabigatran"), ("Plavix 75 mg tablet", "clopidogrel"),
+                                          ("metformin 500 mg", None)])
+def test_brand_and_free_text_resolve_to_generic(text, generic):
+    assert default_index().resolve_drug(text) == generic
+
+
+@pytest.mark.parametrize("procedure,level", [("Total hip arthroplasty", "high"), ("Colonoscopy with polypectomy", "low"),
+                                             ("Unlisted procedure", "high")])
+def test_bleeding_risk_is_inferred_when_unlabelled(procedure, level):
+    assert default_index().bleeding_risk(procedure)["level"] == level
+
+
+def test_messy_set_keeps_gold_labels():
+    clean = [json.loads(l) for l in open(os.path.join(ROOT, "data", "gap2", "test.jsonl"))]
+    messy = [json.loads(l) for l in open(os.path.join(ROOT, "data", "gap2", "test_messy.jsonl"))]
+    assert [c["gold"] for c in clean] == [m["gold"] for m in messy]
+    assert all("category" not in e["resource"] for m in messy for e in m["bundle"]["entry"]
+               if e["resource"]["resourceType"] == "Procedure")

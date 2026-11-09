@@ -87,7 +87,9 @@ def parse_flags(text):
 
 
 def key(flag):
-    return flag["type"], flag["item"].lower()
+    """(type, item) with the item normalised identically for every arm (brand -> generic)."""
+    item = flag["item"].strip()
+    return flag["type"], (default_index().resolve_drug(item) or item).lower()
 
 
 def score(cases, preds):
