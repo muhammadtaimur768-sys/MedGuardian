@@ -1,0 +1,19 @@
+{
+  "source": "Jiang et al., MedAgentBench, arXiv:2501.14654v2 (12 Feb 2025), main results table; https://arxiv.org/html/2501.14654v2. Published version: NEJM AI 2025, doi:10.1056/AIdbp2500144.",
+  "settings": {"tasks": 300, "query_tasks": 150, "action_tasks": 150, "max_rounds": 8, "temperature": 0},
+  "note": "Reported by the base paper, NOT reproduced by us (except Mistral v0.3, re-run as E0 on 20 tasks). 'Qwen2.5' in the paper is Qwen2.5-72B-Instruct; our backbone is the 7B model.",
+  "models": {
+    "Claude 3.5 Sonnet v2": {"overall": 69.67, "query": 85.33, "action": 54.00},
+    "GPT-4o": {"overall": 64.00, "query": 72.00, "action": 56.00},
+    "DeepSeek-V3": {"overall": 62.67, "query": 70.67, "action": 54.67},
+    "Gemini-1.5 Pro": {"overall": 62.00, "query": 52.67, "action": 71.33},
+    "GPT-4o-mini": {"overall": 56.33, "query": 59.33, "action": 53.33},
+    "o3-mini": {"overall": 51.67, "query": 54.67, "action": 48.67},
+    "Qwen2.5-72B": {"overall": 51.33, "query": 38.67, "action": 64.00},
+    "Llama 3.3 70B": {"overall": 46.33, "query": 50.00, "action": 42.67},
+    "Gemini 2.0 Flash": {"overall": 38.33, "query": 34.00, "action": 42.67},
+    "Gemma2 27B": {"overall": 19.33, "query": 38.67, "action": 0.00},
+    "Gemini 2.0 Pro": {"overall": 18.00, "query": 25.33, "action": 10.67},
+    "Mistral v0.3 7B": {"overall": 4.00, "query": 8.00, "action": 0.00}
+  }
+}

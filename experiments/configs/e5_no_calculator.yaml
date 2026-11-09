@@ -1,0 +1,16 @@
+# E5 ablation: MedGuardian with use_calculator switched OFF (all else identical to E3). Dev split only.
+# only the Gap 1 components differ (each switchable for the E5 ablation).
+name: e5_no_calculator
+mode: medguardian
+model: medguardian-qwen
+base_url: http://localhost:11434/v1
+num_ctx: 16384
+temperature: 0
+max_tokens: 2048
+seed: 0
+max_rounds: 8
+fhir_base: http://localhost:8080/fhir/
+medguardian:
+  use_typed_tools: true
+  use_calculator: false
+  use_order_verifier: true

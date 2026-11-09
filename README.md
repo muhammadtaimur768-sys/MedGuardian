@@ -1,184 +1,130 @@
 # MedGuardian
 
-AI4015 Agentic AI, Project G3-07, Phase 1 (Deliverable C).
+AI4015 Agentic AI, Project G3-07, Phase 2.
 
-MedGuardian is a tool-grounded agentic co-pilot for medication dosage safety (Gap 1), with planned
-extensions for peri-operative process auditing (Gap 2) and voice-driven sonography reporting (Gap 3).
-It builds on [MedAgentBench](https://github.com/stanfordmlgroup/MedAgentBench) (Jiang et al.,
-*NEJM AI* 2025, MIT licence), which is included as a git submodule. In Phase 1 the Gap 1 workflow runs
-end to end: an LLM orchestrator looks up a patient on a FHIR R4 server, reads creatinine and weight,
-computes Cockcroft-Gault creatinine clearance, applies a renal dose table, and holds the result for
-clinician approval. Gaps 2 and 3 are interfaces only. Architecture: [`docs/architecture.md`](docs/architecture.md).
+MedGuardian is an agentic co-pilot for EHR actions that runs **entirely on one laptop** (Apple M4,
+16 GB) with a 7B open-weight model and **no API spend**. It extends the base paper,
+[MedAgentBench](https://github.com/stanfordmlgroup/MedAgentBench) (Jiang et al., *NEJM AI* 2025,
+doi:10.1056/AIdbp2500144), with one component per research gap fixed in Phase 1:
+
+| Gap | Component | Code |
+|---|---|---|
+| **G1** Action reliability | Typed FHIR tools, calculator, pre-order verifier with one repair round | `src/medguardian/tools/fhir_summary.py`, `tools/task_context.py`, `verify/order_verifier.py` |
+| **G2** Process guardian | Medication/lab timeline verifier with BM25-retrieved guideline thresholds | `src/medguardian/guardian/`, `tools/guideline_rag.py`, `data/corpora/guidelines/` |
+| **G3** Sonography fusion | Screenshot OCR + dictation ASR + template-constrained fusion | `src/sonography/pipeline.py`, `templates.py` |
+
+Every component is a switch in `src/medguardian/config.py` (`MedGuardianConfig`) for ablation.
+
+![architecture](paper/figures/architecture.png)
+
+## Gap-resolution table
+
+Generated from `results/` by `experiments/make_tables.py` (do not edit by hand).
+
+<!-- GAP_TABLE_START -->
+| Gap | Method / component | Metric | Base paper result | Our result | Addressed? |
+|---|---|---|---|---|---|
+| Gap 1: action reliability | Typed FHIR tools, calculator, pre-order verifier | Action SR (%), test 50 | 0.0 (E2, reproduced) | -- (E3) | -- |
+| Gap 2: process guardian | Timeline verifier + BM25 guideline retrieval | F1, 30 synthetic records | not evaluated (LLM-only arm: --) | -- | -- |
+| Gap 3: sonography fusion | OCR + ASR + template-constrained fusion | Field F1, 20 synthetic cases | not evaluated (best unimodal: --) | -- | -- |
+<!-- GAP_TABLE_END -->
 
 ## Team
 
-| Role | Name | Roll no. |
-|---|---|---|
-| Group head (Module 1 / Gap 1) | Syed Muhammad Mustafa | 23i-0661 |
-| Group member (infra, orchestration, Module 2 / sonography) | Muhammad bin Taimur | 23i-0810 |
-| Supervisor | Naeem Tareen | |
+| Role | Name | Roll no. | Email |
+|---|---|---|---|
+| Group head (Module 1 / Gap 1) | Syed Muhammad Mustafa | 23i-0661 | i230661@isb.nu.edu.pk |
+| Group member (infra, orchestration, Module 2 / Gaps 2–3) | Muhammad bin Taimur | 23i-0810 | i230810@isb.nu.edu.pk |
+| Supervisor | Naeem Tareen | | |
 
 ## Repository layout
 
 ```
-.
-├── medagentbench/              # upstream MedAgentBench (git submodule, not edited)
-├── baseline/configs/           # our overlay configs for the upstream baseline (agent template, etc.)
-├── src/
-│   ├── medguardian/
-│   │   ├── state.py            # PatientContext, ToolCallRecord, DosingRecommendation
-│   │   ├── llm_client.py       # OpenAI-compatible chat client with tool calling (Gemini default)
-│   │   ├── orchestrator.py     # LLM tool-calling loop + human approval gate
-│   │   └── tools/
-│   │       ├── fhir_tools.py   # query_patient, query_observation
-│   │       ├── dosing.py       # cockcroft_gault_crcl, renal_adjusted_dose (5 drugs)
-│   │       └── stubs.py        # guideline_rag (Gap 1, Phase 2), timeline_verifier (Gap 2)
-│   └── sonography/stub.py      # Gap 3 data contract (stub)
-├── eval/
-│   ├── data/seed_cases.json    # 10 synthetic renal dosing cases, hand-computed ground truth
-│   ├── mock_fhir_server.py     # Docker-free FHIR R4 mock (port 8081)
-│   ├── run_rule_baseline.py    # non-LLM baselines B0/B1
-│   ├── run_tool_augmented.py   # MedGuardian agent on the seed cases
-│   ├── run_baseline.py         # sets up / checks the upstream baseline run
-│   ├── summarize_baseline.py   # query vs action success rates from upstream outputs
-│   └── *_results.md            # results
-├── tests/                      # pytest: state, dosing, FHIR tools, orchestrator
-├── docs/architecture.md        # diagrams, contracts, limitations
-├── demo.py                     # end-to-end Gap 1 demo
-├── requirements-medguardian.txt
-└── .env.example
+src/medguardian/      runner.py (MedAgentBench loop), mab.py (upstream bridge), config.py (switches),
+                      llm/pool.py (Ollama client + cache + overflow detection), tracing.py (JSONL),
+                      tools/ (G1 typed tools, calculator, task-text parser, guideline RAG; Phase 1 dosing),
+                      verify/ (G1 order verifier), guardian/ (G2 process guardian, severity)
+src/sonography/       G3 OCR / ASR / extraction / fusion, report template
+data/                 make_splits.py + splits/ (dev 20, test 50), generators/ (G2, G3), gap2/, gap3/,
+                      corpora/guidelines/, reference/ (base paper's reported numbers, with source)
+experiments/          configs/*.yaml (E0–E6), run_e4_g2.py, run_e4_g3.py, failure_analysis.py,
+                      make_tables.py, make_figures.py, reproduce_all.sh, ollama/ (Modelfiles)
+results/              CSV/JSON results used in the paper
+logs/                 JSONL agent trajectories (sample committed in logs/samples/)
+tests/                pytest for every deterministic component
+docs/                 devlog.md, architecture.md, gap_resolution.md
+paper/                IEEEtran source; tables/ and figures/ are generated
+medagentbench/        upstream submodule (not edited)
 ```
 
-## Setup
+## Install
 
-Python 3.9 or newer. The code works with pydantic 1.10 (upstream pin) and pydantic 2.
+macOS on Apple silicon was used for every reported number; Linux works for G1/G2 (G3's OCR uses Apple
+Vision and its audio was generated with macOS `say`; the generated files are committed).
 
 ```bash
-git clone --recurse-submodules <repo-url>
-cd <repo>
-python3 -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -r requirements-medguardian.txt
-cp .env.example .env               # then set GEMINI_API_KEY in .env
+git clone --recurse-submodules https://github.com/muhammadtaimur768-sys/MedGuardian.git
+cd MedGuardian
+uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requirements-medguardian.txt
 ```
 
-LLM defaults (in `.env.example`): `LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai`,
-`LLM_MODEL=gemini-3.5-flash-lite`. Any OpenAI-compatible endpoint works (Groq, OpenAI, Ollama) by changing
-`LLM_BASE_URL`, `LLM_MODEL` and the key. Check current model IDs and free-tier limits with the provider
-before running.
+1. **FHIR server** (Docker; on Apple silicon enable Rosetta in Docker Desktop):
+   ```bash
+   docker run -d --name medagentbench -p 8080:8080 jyxsu6/medagentbench:latest
+   ```
+   Ready when `curl localhost:8080/fhir/metadata` answers (about 70 s).
+2. **Grader.** Download `refsol.py` from the Box link in `medagentbench/README.md` and save it as
+   `medagentbench/src/server/tasks/medagentbench/refsol.py`. It is licensed separately and git-ignored.
+3. **Models** (Ollama):
+   ```bash
+   brew install ollama && brew services start ollama
+   ollama pull qwen2.5:7b-instruct-q4_K_M && ollama pull mistral:7b-instruct-v0.3-q4_K_M
+   ollama create medguardian-qwen -f experiments/ollama/Modelfile.qwen
+   ollama create medguardian-mistral -f experiments/ollama/Modelfile.mistral
+   ```
+   The Modelfiles pin the 16,384-token context; Ollama's OpenAI endpoint ignores per-request `num_ctx`.
 
-## Running
+No API key or `.env` is needed for Phase 2; `.env.example` documents the optional Phase 1 hosted-LLM
+variables. Run on mains power with Low Power Mode off (see `docs/devlog.md`).
 
-Tests (no network, no API key; the orchestrator test uses a scripted fake LLM):
+## Run
 
 ```bash
-pytest
+.venv/bin/python -m pytest                       # all deterministic components, no network needed
+.venv/bin/python -m src.medguardian.runner --config experiments/configs/e3_medguardian.yaml --split dev --limit 5
 ```
 
-Mock FHIR server (synthetic seed patients on `http://localhost:8081/fhir/`). The demo and eval scripts
-start it themselves when needed; run it on its own if you want to query it by hand:
-
-```bash
-python eval/mock_fhir_server.py
-```
-
-End-to-end demo (name/DOB -> patient -> creatinine/weight -> CrCl -> renal dose -> approve? [y/N]):
-
-```bash
-python demo.py --no-llm --case SC01   # fixed tool chain, no API key needed
-python demo.py --case SC04            # LLM orchestrator (needs GEMINI_API_KEY)
-python demo.py --fhir live --case SC01  # against the MedAgentBench Docker server instead of the mock
-```
-
-Rule-based baselines and the tool-augmented agent on the 10 seed cases:
-
-```bash
-python eval/run_rule_baseline.py      # writes eval/rule_baseline_results.md
-python eval/run_tool_augmented.py     # writes eval/tool_augmented_results.md (needs API key)
-```
-
-### Upstream MedAgentBench baseline
-
-This runs the unmodified MedAgentBench agent on a stratified subset of its tasks. It needs Docker,
-the grader file and an API key.
-
-1. Start the FHIR server:
-   ```bash
-   docker pull jyxsu6/medagentbench:latest
-   docker run -p 8080:8080 jyxsu6/medagentbench:latest
-   ```
-   Wait until `http://localhost:8080/fhir/metadata` responds.
-2. Download `refsol.py` from the Box link in the upstream README
-   (https://stanfordmedicine.box.com/s/fizv0unyjgkb1r3a83rfn5p3dc673uho) and place it at
-   `medagentbench/src/server/tasks/medagentbench/refsol.py`. Do not commit it (it is in `.gitignore`).
-3. Install the upstream requirements (`pip install -r medagentbench/requirements.txt`), then generate
-   the overlay configs and subset data, and check the setup:
-   ```bash
-   python eval/run_baseline.py setup
-   python eval/run_baseline.py check
-   ```
-4. Start the controller and one task worker (leave it running). Upstream `start_task` does not pass
-   `--config` to its workers, so our script starts them itself:
-   ```bash
-   python eval/run_baseline.py start
-   ```
-   Then, in a second terminal:
-   ```bash
-   cd medagentbench && python -m src.assigner --config configs/assignments/medguardian_gemini.yaml
-   ```
-5. Summarise the results:
-   ```bash
-   python eval/summarize_baseline.py   # writes eval/baseline_results.md
-   ```
-
-## Results
-
-Numbers, model IDs, dates and per-case traces are in the results files:
-
-- [`eval/rule_baseline_results.md`](eval/rule_baseline_results.md): non-LLM baselines on the 10 seed cases.
-  B0 (no renal check, requested dose given unchanged): 4/10. B1 (scripted tool chain): 10/10. B1 shares
-  code with the tools, so it checks the tools against the hand-computed values; it is not an agent result.
-- [`eval/tool_augmented_results.md`](eval/tool_augmented_results.md): MedGuardian LLM agent on the seed cases.
-  `gemini-3.5-flash-lite`: 10/10, with the full tool chain on every case and about 4.5k prompt tokens per case.
-- [`eval/baseline_results.md`](eval/baseline_results.md): upstream MedAgentBench agent on a 30-task subset (pending),
-  split into query vs action tasks (paper reference for Claude 3.5 Sonnet v2: query 85.33%, action 54.00%,
-  overall 69.67%).
-
-Seed-case ground truth is hand-computed; the arithmetic is in each case's `notes` field in
-`eval/data/seed_cases.json`. It does not come from the LLM or from the tools under test.
-
-## Implemented vs stubbed
-
-| Component | Gap | Status |
+| Experiment | Command (from the repo root, with `.venv/bin/python`) | Output |
 |---|---|---|
-| State schema and contracts (`state.py`) | all | Implemented |
-| FHIR tools `query_patient`, `query_observation` | Gap 1 | Implemented, tested against the mock server |
-| `cockcroft_gault_crcl`, `renal_adjusted_dose` (5 drugs) | Gap 1 | Implemented, unit-tested incl. band edges |
-| Orchestrator + OpenAI-compatible LLM adapter | Gap 1 | Implemented |
-| Human approval gate | Gap 1 | CLI placeholder; no EHR writes |
-| Mock FHIR server, seed dataset, runners | Gap 1 | Implemented |
-| `guideline_rag` | Gap 1 (Phase 2) | Stub (returns "not implemented") |
-| `timeline_verifier` | Gap 2 | Stub (returns "not implemented") |
-| Sonography reporting (`src/sonography/stub.py`) | Gap 3 | Stub (data contract only) |
+| E0 runner fidelity | `-m src.medguardian.runner --config experiments/configs/e0_mistral.yaml --split test --per-category 2 --run-name e0_mistral_test20` | `results/e0_mistral_test20*` |
+| E1 non-agentic baseline | `-m src.medguardian.runner --config experiments/configs/e1_single_call.yaml --split test --run-name e1_single_call_test50` | `results/e1_*` |
+| E2 base paper | `-m src.medguardian.runner --config experiments/configs/e2_basepaper.yaml --split test --run-name e2_basepaper_test50` | `results/e2_*` |
+| E3 MedGuardian | `-m src.medguardian.runner --config experiments/configs/e3_medguardian.yaml --split test --run-name e3_medguardian_test50` | `results/e3_*` |
+| E4-G1 | E3 vs E2 action SR (above) | |
+| E4-G2 | `experiments/run_e4_g2.py --split test` | `results/e4_g2_test*` |
+| E4-G3 | `experiments/run_e4_g3.py --split test` | `results/e4_g3_test*` |
+| E5 ablation | configs `e5_no_*.yaml` on `--split dev` (see `experiments/run_phase_b.sh`) | `results/e5_*` |
+| E6 efficiency / reliability | per-task cost in every results CSV; configs `e6_t0.7_s{0,1,2}.yaml` | `results/e6_*` |
+| Tables, figures, failures | `experiments/failure_analysis.py <run>`, `make_tables.py`, `make_figures.py` | `paper/tables/`, `paper/figures/` |
 
-Known limitations are listed in [`docs/architecture.md`](docs/architecture.md#limitations).
+`experiments/reproduce_all.sh` runs everything in order. LLM responses are cached under `.cache/`
+(keyed by model, messages, temperature, seed), so a re-run replays instantly; delete `.cache/` to
+re-query the model. Temperature-0 runs were checked to be byte-identical across repeats.
 
-## Handout §6 checklist
+## Changes since Phase 1
 
-| Item | Where |
+| Change | Reason |
 |---|---|
-| Finalized architecture | `docs/architecture.md` |
-| Working data/environment pipeline | `eval/mock_fhir_server.py`, `eval/data/seed_cases.json`, MedAgentBench submodule + `eval/run_baseline.py` |
-| Baseline with initial results | `eval/rule_baseline_results.md`, `eval/baseline_results.md` |
-| Model/provider setup | `src/medguardian/llm_client.py`, `.env.example`, `baseline/configs/` |
-| Tool interfaces | `src/medguardian/tools/`, `src/sonography/stub.py` |
-| Defined state/context + structured contracts | `src/medguardian/state.py`, `docs/architecture.md` |
-| Initial evaluation dataset / test suite | `eval/data/seed_cases.json`, `tests/` |
-| At least one end-to-end workflow | `demo.py`, `eval/run_tool_augmented.py` |
-| Clean repo + README + commits from both members | this README, git history |
+| All inference local (Ollama, Qwen2.5-7B / Mistral-7B) instead of hosted Gemini/Groq | Zero budget; Groq lists Llama-3.3-70B as deprecated and its free token cap is far below the ~3–4 M tokens E2+E3 need |
+| Own in-process MedAgentBench runner instead of the AgentBench controller | Python 3.9 pin, a known upstream bug, and no component switches for ablation; protocol and grader reused verbatim; fidelity checked with E0 |
+| Llama-3.3-70B and Claude numbers cited from the paper, not reproduced | 70B does not fit in 16 GB; stated as reported vs reproduced in every table |
+| Phase 1 "10/10" withdrawn | It was circular (mock server built from the answer key); see `docs/devlog.md` |
+| Clinician Likert rating (G3) and supervisor review of injected errors (G2) dropped | No clinician available in the timeframe; replaced by automated field-F1 and documented rule-based severity |
+| Smaller evaluation sets (test 50 / G2 30 / G3 20) | Single-laptop compute; exact n and CIs reported |
 
 ## Data and ethics
 
-Only MedAgentBench's public synthetic FHIR patients and our hand-written synthetic seed cases are used.
-No real patient or hospital data is in this repository. This is a research prototype for a course
-project. It is not a medical device and must not be used for clinical decisions.
+Only MedAgentBench's public synthetic FHIR patients and our own synthetic Gap 2/3 records are used; no
+real patient or hospital data is in this repository. The guideline corpus is a short curated summary
+of published guidance (PAUSE, ACCP 2022) for research use and has not been clinically validated.
+MedGuardian is a research prototype, not a medical device, and must not be used for clinical decisions.

@@ -1,0 +1,16 @@
+# E6 reliability probe: MedGuardian at temperature 0.7, seed 1 (temperature 0 is deterministic).
+# only the Gap 1 components differ (each switchable for the E5 ablation).
+name: e6_t0.7_s1
+mode: medguardian
+model: medguardian-qwen
+base_url: http://localhost:11434/v1
+num_ctx: 16384
+temperature: 0.7
+max_tokens: 2048
+seed: 1
+max_rounds: 8
+fhir_base: http://localhost:8080/fhir/
+medguardian:
+  use_typed_tools: true
+  use_calculator: true
+  use_order_verifier: true
