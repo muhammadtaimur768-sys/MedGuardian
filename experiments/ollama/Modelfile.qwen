@@ -1,0 +1,5 @@
+# ollama create medguardian-qwen -f experiments/ollama/Modelfile.qwen
+# num_ctx must be baked in: Ollama's OpenAI-compatible endpoint ignores options.num_ctx.
+FROM qwen2.5:7b-instruct-q4_K_M
+PARAMETER num_ctx 16384
+PARAMETER temperature 0

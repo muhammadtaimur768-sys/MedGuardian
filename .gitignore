@@ -19,3 +19,9 @@ refsol.py
 .idea/
 .vscode/
 .DS_Store
+
+# Phase 2 run artefacts
+.cache/
+logs/*.jsonl
+logs/*.jsonl.prev
+!logs/samples/

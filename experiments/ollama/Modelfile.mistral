@@ -1,0 +1,5 @@
+# ollama create medguardian-mistral -f experiments/ollama/Modelfile.mistral
+# Same context window as the Qwen arm so E0 and E2 differ only in the model.
+FROM mistral:7b-instruct-v0.3-q4_K_M
+PARAMETER num_ctx 16384
+PARAMETER temperature 0

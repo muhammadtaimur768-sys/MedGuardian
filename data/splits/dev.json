@@ -1,0 +1,27 @@
+{
+  "source": "medagentbench/data/medagentbench/test_data_v2.json",
+  "seed": 0,
+  "n": 20,
+  "ids": [
+    "task1_5",
+    "task1_17",
+    "task2_18",
+    "task2_19",
+    "task3_21",
+    "task3_7",
+    "task4_4",
+    "task4_15",
+    "task5_24",
+    "task5_23",
+    "task6_13",
+    "task6_7",
+    "task7_11",
+    "task7_25",
+    "task8_24",
+    "task8_2",
+    "task9_18",
+    "task9_30",
+    "task10_22",
+    "task10_4"
+  ]
+}

@@ -1,0 +1,11 @@
+# E2: unmodified base-paper agent (upstream prompt + GET/POST/FINISH protocol), Qwen2.5-7B local.
+name: e2_basepaper
+mode: basepaper
+model: medguardian-qwen          # experiments/ollama/Modelfile.qwen
+base_url: http://localhost:11434/v1
+num_ctx: 16384
+temperature: 0
+max_tokens: 2048                 # upstream agent configs
+seed: 0
+max_rounds: 8                    # upstream configs/tasks/medagentbench.yaml
+fhir_base: http://localhost:8080/fhir/
