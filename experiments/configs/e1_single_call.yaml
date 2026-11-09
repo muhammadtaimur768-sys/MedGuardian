@@ -1,12 +1,13 @@
-# E1: non-agentic single-call baseline -- the base-paper prompt with a 1-round cap, so the model
-# never sees an environment response. Tasks needing patient data cannot be solved by design.
+# E1: non-agentic baseline (retrieve-then-answer). A fixed pipeline fetches the patient and every lab
+# code named in the task; the model then makes ONE call that writes all POSTs and FINISH. No loop, no
+# environment feedback, no calculator, no verifier. Same prompt, model, decoding and grader as E2/E3.
 name: e1_single_call
-mode: basepaper
-model: medguardian-qwen          # experiments/ollama/Modelfile.qwen
+mode: single_call
+model: medguardian-qwen
 base_url: http://localhost:11434/v1
 num_ctx: 16384
 temperature: 0
-max_tokens: 2048                 # upstream agent configs
+max_tokens: 2048
 seed: 0
-max_rounds: 1                    # non-agentic: one call, no environment feedback
+max_rounds: 1
 fhir_base: http://localhost:8080/fhir/

@@ -188,6 +188,14 @@ def run_task(case: Dict[str, Any], funcs: List[Dict[str, Any]], llm: ChatModel, 
                 if recovered:
                     emitted = recovered
                     kind, arg = parse_action(recovered)
+            if kind == "GET" and mg.use_order_verifier:
+                # One action per round: if the model wrote several, keep only the first GET line
+                # (upstream would glue the following lines onto the URL).
+                first = clean_response(emitted).split("\n")[0].strip()
+                url_only = first[3:].strip().split()[0] if len(first) > 3 and first[3:].strip() else ""
+                if url_only and "GET " + url_only != clean_response(emitted):
+                    emitted = "GET " + url_only
+                    kind, arg = parse_action(emitted)
             step = dict(round=rounds, raw_response=res.content, parsed_action=kind, latency_ms=res.latency_ms,
                         tokens_in=res.tokens_in, tokens_out=res.tokens_out, cached=res.cached)
 
@@ -195,10 +203,17 @@ def run_task(case: Dict[str, Any], funcs: List[Dict[str, Any]], llm: ChatModel, 
                 n_get += 1
                 env.append(("agent", emitted))
                 if mg.use_typed_tools:
-                    url, notes = fhir_summary.normalise_url(arg)
+                    url, notes = fhir_summary.normalise_url(arg, drop_date_filters=mg.use_calculator)
                     bundle, err = fhir_summary.fetch_all(fhir.get, url)
                     if err is None:
-                        data = json.dumps(fhir_summary.summarise(bundle, facts, mg.use_calculator), ensure_ascii=False)
+                        summary = fhir_summary.summarise(bundle, facts, mg.use_calculator)
+                        if notes:
+                            summary["search_adjustments"] = notes
+                        if not summary["total"]:
+                            hint = fhir_summary.empty_result_hint(url, facts)
+                            if hint:
+                                summary["hint"] = hint
+                        data = json.dumps(summary, ensure_ascii=False)
                         reply = MG_GET_NUDGE.format(data=data)
                     else:
                         reply = fhir_summary.error_hint(url, err)
@@ -290,6 +305,96 @@ def run_task(case: Dict[str, Any], funcs: List[Dict[str, Any]], llm: ChatModel, 
     return row
 
 
+SINGLE_CALL_SUFFIX = """
+
+The following data was retrieved from the EHR for this task by a fixed pipeline (you cannot make any
+further requests):
+{data}
+
+Respond ONCE with every action needed, in order: zero or more POST requests (each as a line
+"POST url" followed by its JSON payload), and finally FINISH([...]). Do not write GET requests."""
+
+
+def retrieve_for_single_call(case: Dict[str, Any], fhir: "FhirGetter", fhir_base: str) -> Dict[str, Any]:
+    """E1's fixed retrieval: the patient (by MRN, or by name + DOB for look-up tasks) and every lab code
+    the task text names. No calculator, no filtering beyond the plain field summary."""
+    facts = task_context.parse(case)
+    urls = []
+    if facts.mrn:
+        urls.append("%sPatient?identifier=%s&_format=json" % (fhir_base, facts.mrn))
+    else:
+        import re as _re
+        m = _re.search(r"name ([A-Za-z'-]+) ([A-Za-z'-]+) and DOB of (\d{4}-\d{2}-\d{2})", case["instruction"])
+        if m:
+            urls.append("%sPatient?given=%s&family=%s&birthdate=%s&_format=json" % (fhir_base, *m.groups()))
+    for code in facts.lab_codes.values():
+        if facts.mrn:
+            urls.append("%sObservation?patient=%s&code=%s&_format=json" % (fhir_base, facts.mrn, code))
+    out = {}
+    for u in urls:
+        bundle, err = fhir_summary.fetch_all(fhir.get, u)
+        out[u.replace(fhir_base, "").replace("&_format=json", "")] = (
+            {"error": err} if err else fhir_summary.summarise(bundle, facts, use_calculator=False))
+    return out
+
+
+def split_actions(text: str) -> List[Tuple[str, str]]:
+    """Split a single-call response into (kind, block) in order: POST blocks and the FINISH line."""
+    blocks, cur = [], None
+    for line in clean_response(text).split("\n"):
+        s = line.strip()
+        if s.startswith(("POST ", "FINISH(", "GET ")):
+            if cur:
+                blocks.append(cur)
+            cur = [s.split(" ", 1)[0].split("(")[0], s]
+        elif cur:
+            cur[1] += "\n" + line
+    if cur:
+        blocks.append(cur)
+    return [(k, b.strip()) for k, b in blocks]
+
+
+def run_single_call(case: Dict[str, Any], funcs: List[Dict[str, Any]], llm: ChatModel, fhir: "FhirGetter",
+                    cfg: Dict[str, Any], tracer: Tracer) -> Dict[str, Any]:
+    """E1 non-agentic baseline: fixed retrieval, then one LLM call that emits all actions at once."""
+    tid = case["id"]
+    fhir_base = cfg["fhir_base"]
+    data = retrieve_for_single_call(case, fhir, fhir_base)
+    prompt = mab.build_prompt(case, funcs, fhir_base) + SINGLE_CALL_SUFFIX.format(data=json.dumps(data, ensure_ascii=False))
+    env: List[Tuple[str, str]] = [("user", prompt)]
+    status, result, n_post, tok_in, tok_out, latency, cached = INVALID_ACTION, None, 0, 0, 0, 0.0, 0
+    tracer.log("task_start", tid, category=mab.category(tid), kind=mab.task_kind(tid), mode="single_call")
+    try:
+        res = llm.chat([{"role": "user", "content": prompt}])
+        tok_in, tok_out, latency, cached = res.tokens_in, res.tokens_out, res.latency_ms, int(res.cached)
+        for kind, block in split_actions(res.content):
+            if kind == "POST":
+                ok = parse_action(block)[1] is not None
+                env.extend([("agent", block), ("user", POST_OK if ok else POST_BAD)])
+                n_post += 1
+            elif kind == "FINISH":
+                env.append(("agent", block))
+                status, result = COMPLETED, parse_action(block)[1]
+                break
+        tracer.step(tid, round=1, raw_response=res.content, parsed_action=status, latency_ms=res.latency_ms,
+                    tokens_in=res.tokens_in, tokens_out=res.tokens_out, cached=res.cached)
+    except ContextLimitError as e:
+        status = CONTEXT_LIMIT
+        tracer.step(tid, round=1, success=False, result=str(e))
+    except LLMError as e:
+        status = TASK_ERROR
+        tracer.log("task_error", tid, error=str(e))
+    correct, grader_out, grader_err = mab.grade(case, result, env, fhir_base)
+    row = {"task_id": tid, "category": mab.category(tid), "kind": mab.task_kind(tid), "status": status,
+           "correct": int(correct), "result": result, "rounds": 1, "n_get": 0, "n_post": n_post,
+           "n_post_rejected": 0, "n_post_blocked": 0, "n_format_repairs": 0, "tokens_in": tok_in,
+           "tokens_out": tok_out, "latency_ms": round(latency, 1), "llm_cached_calls": cached,
+           "grader_error": grader_err or ""}
+    tracer.log("task_end", tid, grader_stdout=grader_out.strip(), history=[{"role": r, "content": c} for r, c in env],
+               **{k: v for k, v in row.items() if k != "task_id"})
+    return row
+
+
 # -- run orchestration -----------------------------------------------------------------------
 def load_config(path: str) -> Dict[str, Any]:
     with open(path, encoding="utf-8") as fh:
@@ -302,7 +407,7 @@ def load_config(path: str) -> Dict[str, Any]:
     cfg.setdefault("max_tokens", 2048)
     cfg.setdefault("seed", 0)
     cfg.setdefault("num_ctx", 16384)
-    if cfg["mode"] not in ("basepaper", "medguardian"):
+    if cfg["mode"] not in ("basepaper", "medguardian", "single_call"):
         raise NotImplementedError("mode %r is not implemented" % cfg["mode"])
     if cfg["mode"] == "medguardian":
         cfg["medguardian"] = MedGuardianConfig.from_dict(cfg.get("medguardian") or {}).as_dict()
@@ -391,7 +496,7 @@ def main(argv: Optional[List[str]] = None) -> Dict[str, Any]:
         writer.writeheader()
         for i, case in enumerate(cases, 1):
             t0 = time.time()
-            row = run_task(case, funcs, llm, fhir, cfg, tracer)
+            row = (run_single_call if cfg["mode"] == "single_call" else run_task)(case, funcs, llm, fhir, cfg, tracer)
             writer.writerow(row)
             fh.flush()
             rows.append(row)

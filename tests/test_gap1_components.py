@@ -201,3 +201,35 @@ def test_all_flags_off_behaves_like_basepaper(tmp_path, graded):
     off = dict(MG_CFG, medguardian={"use_typed_tools": False, "use_calculator": False, "use_order_verifier": False})
     row, _ = run(tmp_path, QUERY_CASE, ["Let me think."], [], cfg=off)
     assert row["status"] == runner.INVALID_ACTION and row["n_format_repairs"] == 0
+
+
+# -- dev-failure fixes (2026-11-10) ---------------------------------------------------------
+def test_full_name_is_split_and_sort_count_dropped():
+    url, notes = fs.normalise_url("http://h/fhir/Patient?name=Shannon+Palmer&birthdate=1956-11-16&_sort=-date&_count=1")
+    assert "given=Shannon&family=Palmer&birthdate=1956-11-16" in url
+    assert "_sort" not in url and "_count" not in url and len(notes) == 3
+
+
+def test_date_filters_are_dropped_only_with_the_calculator():
+    u = "http://h/fhir/Observation?code=GLU&patient=S1&date=2023-11-13T10:15:00+00:00"
+    assert "date=" not in fs.normalise_url(u, drop_date_filters=True)[0]
+    assert "date=2023-11-13T10:15:00%2B00:00" in fs.normalise_url(u, drop_date_filters=False)[0]
+
+
+def test_empty_search_points_to_the_code_in_the_task_text():
+    f = tc.parse(MG_CASE)
+    assert '"MG"' in fs.empty_result_hint("http://h/fhir/Observation?code=19123-9&patient=S1", f)
+    assert fs.empty_result_hint("http://h/fhir/Observation?code=MG&patient=S1", f) is None
+
+
+def test_only_the_first_get_is_executed(tmp_path, graded):
+    lab = [obs(1.2, "2023-11-13T06:00:00+00:00")]
+    row, llm = run(tmp_path, MG_CASE, ["GET http://h/fhir/Observation?code=MG&patient=S1234567\n" + post(mg_order(2, 2)),
+                                       "FINISH([1.2])"], lab)
+    assert row["n_get"] == 1 and row["n_post"] == 0
+    assert graded["history"][1] == ("agent", "GET http://h/fhir/Observation?code=MG&patient=S1234567")
+
+
+def test_single_call_splits_posts_and_finish():
+    acts = runner.split_actions('Plan:\nPOST http://h/fhir/MedicationRequest\n{"a": 1}\nFINISH([3.1])')
+    assert [k for k, _ in acts] == ["POST", "FINISH"] and acts[0][1].endswith('{"a": 1}')

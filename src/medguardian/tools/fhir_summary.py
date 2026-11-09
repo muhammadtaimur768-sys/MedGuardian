@@ -26,8 +26,14 @@ def _iso(s: str) -> Optional[datetime]:
         return None
 
 
-def normalise_url(url: str) -> Tuple[str, List[str]]:
-    """Fix common search mistakes. Returns (url, notes describing each fix)."""
+def normalise_url(url: str, drop_date_filters: bool = False) -> Tuple[str, List[str]]:
+    """Fix common search mistakes. Returns (url, notes describing each fix).
+
+    * `_sort` / `_count` are dropped: the typed tool returns every page, newest first.
+    * a full name in `name=` is split into `given=` + `family=` (HAPI matches name parts).
+    * malformed date ranges are rewritten; with `drop_date_filters` (calculator on) date filters are
+      removed entirely, because the calculator computes the task's window from its own "now".
+    """
     parts = urlsplit(url.strip())
     # A literal '+' in a timezone offset (+00:00) would otherwise be decoded as a space.
     params = parse_qsl(parts.query.replace("+", "%2B"), keep_blank_values=True)
@@ -35,6 +41,18 @@ def normalise_url(url: str) -> Tuple[str, List[str]]:
     for k, v in params:
         if k == "_format":
             continue  # re-added exactly once below
+        if k in ("_sort", "_count"):
+            notes.append("dropped %s=%s (all results are returned, newest first)" % (k, v))
+            continue
+        if k == "name":
+            words = [w for w in re.split(r"(?:%2B|\+|\s)+", v) if w]
+            if len(words) >= 2:
+                out += [("given", words[0]), ("family", words[-1])]
+                notes.append("split name '%s' into given/family" % " ".join(words))
+                continue
+        if k in ("date", "_date") and drop_date_filters:
+            notes.append("removed date filter %s=%s (see calculator for the task's time window)" % (k, v))
+            continue
         if k == "date" and ("/" in v or ".." in v):
             lo, hi = re.split(r"/|\.\.", v, maxsplit=1)
             if _iso(lo) and _iso(hi):
@@ -45,6 +63,20 @@ def normalise_url(url: str) -> Tuple[str, List[str]]:
     out.append(("_format", "json"))
     fixed = urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(out, safe=":/"), ""))
     return fixed, notes
+
+
+def empty_result_hint(url: str, facts: TaskFacts) -> Optional[str]:
+    """When an Observation search finds nothing, point to the lab code the task text gives."""
+    if "/Observation" not in url or not facts.lab_codes:
+        return None
+    q = dict(parse_qsl(urlsplit(url).query.replace("+", "%2B")))
+    code = q.get("code")
+    known = facts.lab_codes
+    if code and code not in known.values():
+        names = ", ".join('%s is "%s"' % (n, c) for n, c in known.items())
+        return ("No results for code=%s. The task text says the observation code for %s; codes such as "
+                "LOINC are for ordering, not searching." % (code, names))
+    return None
 
 
 def error_hint(url: str, error: str) -> str:
