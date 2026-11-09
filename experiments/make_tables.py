@@ -119,7 +119,7 @@ def gap_resolution():
     a2, a3 = (sr(e2, "action") if e2 else None), (sr(e3, "action") if e3 else None)
     d1 = (a3 - a2) if a2 is not None and a3 is not None else None
     rows.append(["Gap 1: action reliability", "Typed FHIR tools, calculator, pre-order verifier",
-                 "Action SR (%), test 50", "%s (E2, reproduced)" % fmt(a2), "%s (E3)" % fmt(a3),
+                 "Action SR (\\%), test 50", "%s (E2, reproduced)" % fmt(a2), "%s (E3)" % fmt(a3),
                  hypothesis_verdict(d1, 15.0) + (" ($\\Delta$%s pp; H1: $\\geq$+15)" % fmt(d1) if d1 is not None else "")])
     gf, lf = (g2.get("guardian") or {}).get("f1"), (g2.get("llm_only") or {}).get("f1")
     d2 = (gf - lf) if gf is not None and lf is not None else None
@@ -213,7 +213,7 @@ def efficiency():
         body.append("\\midrule")
         body.append("\\multicolumn{8}{l}{E6 reliability, MedGuardian at $T{=}0.7$, %d seeds on dev-10: overall SR %.1f $\\pm$ %.1f}"
                     % (len(vals), statistics.mean(vals), statistics.stdev(vals) if len(vals) > 1 else 0.0))
-    table("efficiency", "lccccccc", "System & s/task (p50) & s/task (p95) & tokens in & tokens out & rounds & GETs per correct & invalid/limit/overflow",
+    table("efficiency", "lccccccc", "System & p50 s & p95 s & tok.\\ in & tok.\\ out & rounds & GET/correct & failed runs",
           body, "cost and reliability per task on the 50-task test split; Apple M4, Qwen2.5-7B Q4, zero API spend", wide=True)
 
 
