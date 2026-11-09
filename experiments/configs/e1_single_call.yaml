@@ -1,0 +1,12 @@
+# E1: non-agentic single-call baseline -- the base-paper prompt with a 1-round cap, so the model
+# never sees an environment response. Tasks needing patient data cannot be solved by design.
+name: e1_single_call
+mode: basepaper
+model: medguardian-qwen          # experiments/ollama/Modelfile.qwen
+base_url: http://localhost:11434/v1
+num_ctx: 16384
+temperature: 0
+max_tokens: 2048                 # upstream agent configs
+seed: 0
+max_rounds: 1                    # non-agentic: one call, no environment feedback
+fhir_base: http://localhost:8080/fhir/

@@ -28,9 +28,12 @@ from typing import Any, Dict, List, Optional, Tuple
 import yaml
 
 from . import mab
+from .config import MedGuardianConfig
 from .llm import ChatModel, ContextLimitError, LLMError
 from .llm.pool import CHARS_PER_TOKEN_CEILING
+from .tools import fhir_summary, task_context
 from .tracing import Tracer, setup_logging
+from .verify import order_verifier
 
 ROOT = mab.ROOT
 SPLITS_DIR = os.path.join(ROOT, "data", "splits")
@@ -51,8 +54,41 @@ POST_OK = ("POST request accepted and executed successfully. Please call FINISH 
            "answers for all the questions and finished all the requested tasks")
 POST_BAD = "Invalid POST request"
 
+# MedGuardian messages (only used when the corresponding component is switched on).
+MG_GET_NUDGE = ("Here is the response from the GET request, filtered by MedGuardian (all pages, newest first):\n"
+                "{data}\nPlease call FINISH if you have got answers for all the questions and finished all the "
+                "requested tasks")
+MG_POST_REJECTED = ("MedGuardian order verifier: the order was NOT sent. Problems:\n- {issues}\n"
+                    "Fix every problem and send the corrected POST (one attempt), or call FINISH if no order is needed.")
+MG_POST_NOT_INDICATED = ("MedGuardian order verifier: the order was NOT sent. {issues} Do not place this order; "
+                         "call FINISH with your answer.")
+MG_POST_BLOCKED = ("MedGuardian order verifier: the order was NOT sent and is now blocked. Problems:\n- {issues}\n"
+                   "Do not resend it; call FINISH.")
+MG_FORMAT = ("Your response was not a valid action. Reply with exactly one of: a GET line, a POST line followed by "
+             "a JSON payload, or FINISH([...]) with a JSON-loadable list. No other text.")
+
 CSV_FIELDS = ("task_id", "category", "kind", "status", "correct", "result", "rounds", "n_get",
-              "n_post", "tokens_in", "tokens_out", "latency_ms", "llm_cached_calls", "grader_error")
+              "n_post", "n_post_rejected", "n_post_blocked", "n_format_repairs", "tokens_in", "tokens_out",
+              "latency_ms", "llm_cached_calls", "grader_error")
+
+
+def extract_action(content: str) -> Optional[str]:
+    """Recover an action that the model wrapped in extra prose (MedGuardian only)."""
+    lines = clean_response(content).split("\n")
+    for i, line in enumerate(lines):
+        s = line.strip()
+        if s.startswith("GET ") or s.startswith("FINISH("):
+            return s
+        if s.startswith("POST "):
+            return "\n".join([s] + lines[i + 1:]).strip()
+    return None
+
+
+def _finish_ok(result: str) -> bool:
+    try:
+        return isinstance(json.loads(result), list)
+    except ValueError:
+        return False
 
 
 # -- protocol --------------------------------------------------------------------------------
@@ -106,21 +142,34 @@ class FhirGetter:
 
 def run_task(case: Dict[str, Any], funcs: List[Dict[str, Any]], llm: ChatModel, fhir: FhirGetter,
              cfg: Dict[str, Any], tracer: Tracer) -> Dict[str, Any]:
-    """One task under the upstream base-paper protocol. Returns the CSV row."""
+    """One task. Returns the CSV row.
+
+    `basepaper` mode is upstream start_sample step for step. `medguardian` mode adds the Gap 1
+    components switched on in cfg["medguardian"]. Two transcripts are kept: `conv` is what the
+    model sees (including rejected drafts and verifier feedback); `env` is what was actually sent
+    to the EHR, which is what the grader receives. With every component off, conv == env and the
+    behaviour is identical to basepaper mode.
+    """
     tid = case["id"]
     fhir_base = cfg["fhir_base"]
-    history: List[Tuple[str, str]] = [("user", mab.build_prompt(case, funcs, fhir_base))]
+    mg = MedGuardianConfig.from_dict(cfg.get("medguardian") or {}) if cfg.get("mode") == "medguardian" \
+        else MedGuardianConfig(False, False, False)
+    facts = task_context.parse(case)
+    prompt = mab.build_prompt(case, funcs, fhir_base)
+    conv: List[Tuple[str, str]] = [("user", prompt)]
+    env: List[Tuple[str, str]] = [("user", prompt)]
     status, result = LIMIT_REACHED, None
-    tok_in = tok_out = n_get = n_post = cached_calls = 0
+    tok_in = tok_out = n_get = n_post = n_rej = n_blocked = n_fmt = cached_calls = 0
+    repair_used = blocked = False
     latency = 0.0
     prefix = 0
     rounds = 0
     t_task = time.time()
-    tracer.log("task_start", tid, category=mab.category(tid), kind=mab.task_kind(tid))
+    tracer.log("task_start", tid, category=mab.category(tid), kind=mab.task_kind(tid), medguardian=mg.as_dict())
     try:
         for rnd in range(cfg["max_rounds"]):
             rounds = rnd + 1
-            messages = [{"role": "assistant" if r == "agent" else "user", "content": c} for r, c in history]
+            messages = [{"role": "assistant" if r == "agent" else "user", "content": c} for r, c in conv]
             try:
                 res = llm.chat(messages, prefix_tokens=prefix)
             except ContextLimitError as e:
@@ -131,45 +180,112 @@ def run_task(case: Dict[str, Any], funcs: List[Dict[str, Any]], llm: ChatModel, 
             tok_out += res.tokens_out
             latency += res.latency_ms
             cached_calls += int(res.cached)
-            history.append(("agent", res.content))
+            conv.append(("agent", res.content))
+            emitted = res.content
             kind, arg = parse_action(res.content)
+            if kind == "INVALID" and mg.use_order_verifier:
+                recovered = extract_action(res.content)
+                if recovered:
+                    emitted = recovered
+                    kind, arg = parse_action(recovered)
             step = dict(round=rounds, raw_response=res.content, parsed_action=kind, latency_ms=res.latency_ms,
                         tokens_in=res.tokens_in, tokens_out=res.tokens_out, cached=res.cached)
+
             if kind == "GET":
                 n_get += 1
-                got, hit = fhir.get(arg)
-                if "data" in got:
-                    reply = GET_NUDGE.format(data=got["data"])
-                    tracer.step(tid, tool="GET", args=arg, success=True,
-                                result={"fhir_cached": hit, "chars": len(str(got["data"]))}, **step)
+                env.append(("agent", emitted))
+                if mg.use_typed_tools:
+                    url, notes = fhir_summary.normalise_url(arg)
+                    bundle, err = fhir_summary.fetch_all(fhir.get, url)
+                    if err is None:
+                        data = json.dumps(fhir_summary.summarise(bundle, facts, mg.use_calculator), ensure_ascii=False)
+                        reply = MG_GET_NUDGE.format(data=data)
+                    else:
+                        reply = fhir_summary.error_hint(url, err)
+                    tracer.step(tid, tool="GET", args={"url": url, "normalised": notes}, success=err is None,
+                                result={"chars": len(reply), "error": err}, **step)
                 else:
-                    reply = "Error in sending the GET request: %s" % got["error"]
-                    tracer.step(tid, tool="GET", args=arg, success=False, result=got["error"], **step)
+                    got, hit = fhir.get(arg)
+                    if "data" in got:
+                        reply = GET_NUDGE.format(data=got["data"])
+                        tracer.step(tid, tool="GET", args=arg, success=True,
+                                    result={"fhir_cached": hit, "chars": len(str(got["data"]))}, **step)
+                    else:
+                        reply = "Error in sending the GET request: %s" % got["error"]
+                        tracer.step(tid, tool="GET", args=arg, success=False, result=got["error"], **step)
+                env.append(("user", reply))
+
             elif kind == "POST":
-                n_post += 1
-                reply = POST_OK if arg is not None else POST_BAD
-                tracer.step(tid, tool="POST", args=arg, success=arg is not None, result=reply, **step)
+                if not mg.use_order_verifier:
+                    n_post += 1
+                    reply = POST_OK if arg is not None else POST_BAD
+                    env.extend([("agent", emitted), ("user", reply)])
+                    tracer.step(tid, tool="POST", args=arg, success=arg is not None, result=reply, **step)
+                else:
+                    url = clean_response(emitted).split("\n")[0][4:].strip()
+                    if blocked:
+                        verdict = order_verifier.Verdict(ok=False, issues=["Orders for this task are blocked."])
+                    else:
+                        verdict = order_verifier.verify(url, arg, facts, fhir.get, fhir_base)
+                    if verdict.ok:
+                        n_post += 1
+                        reply = POST_OK
+                        env.extend([("agent", emitted), ("user", reply)])
+                    else:
+                        n_rej += 1
+                        issues = "\n- ".join(verdict.issues)
+                        if verdict.not_indicated:
+                            blocked = True
+                            reply = MG_POST_NOT_INDICATED.format(issues=" ".join(verdict.issues))
+                        elif blocked or repair_used:
+                            blocked = True
+                            reply = MG_POST_BLOCKED.format(issues=issues)
+                        else:
+                            repair_used = True
+                            reply = MG_POST_REJECTED.format(issues=issues)
+                        n_blocked += int(blocked)
+                    tracer.step(tid, tool="POST", args={"url": url, "payload": arg}, success=verdict.ok,
+                                result={"verdict": "accepted" if verdict.ok else ("blocked" if blocked else "rejected"),
+                                        "issues": verdict.issues, "evidence": verdict.evidence, "emitted": verdict.ok},
+                                **step)
+
             elif kind == "FINISH":
-                status, result = COMPLETED, arg
-                tracer.step(tid, tool="FINISH", args=arg, success=True, **step)
-                break
+                if mg.use_order_verifier and not _finish_ok(arg) and n_fmt == 0:
+                    n_fmt += 1
+                    reply = MG_FORMAT
+                    tracer.step(tid, tool="FINISH", args=arg, success=False, result="format repair", **step)
+                else:
+                    env.append(("agent", emitted))
+                    status, result = COMPLETED, arg
+                    tracer.step(tid, tool="FINISH", args=arg, success=True, **step)
+                    break
+
             else:
-                status = INVALID_ACTION
-                tracer.step(tid, success=False, **step)
-                break
-            history.append(("user", reply))
+                if mg.use_order_verifier and n_fmt == 0:
+                    n_fmt += 1
+                    reply = MG_FORMAT
+                    tracer.step(tid, success=False, result="format repair", **step)
+                else:
+                    env.append(("agent", emitted))
+                    status = INVALID_ACTION
+                    tracer.step(tid, success=False, **step)
+                    break
+
+            conv.append(("user", reply))
             prefix = res.tokens_in + res.tokens_out + len(reply) // CHARS_PER_TOKEN_CEILING
     except LLMError as e:
         status, result = TASK_ERROR, None
         tracer.log("task_error", tid, error=str(e))
 
-    correct, grader_out, grader_err = mab.grade(case, result, history, fhir_base)
+    correct, grader_out, grader_err = mab.grade(case, result, env, fhir_base)
     row = {"task_id": tid, "category": mab.category(tid), "kind": mab.task_kind(tid), "status": status,
            "correct": int(correct), "result": result, "rounds": rounds, "n_get": n_get, "n_post": n_post,
+           "n_post_rejected": n_rej, "n_post_blocked": n_blocked, "n_format_repairs": n_fmt,
            "tokens_in": tok_in, "tokens_out": tok_out, "latency_ms": round(latency, 1),
            "llm_cached_calls": cached_calls, "grader_error": grader_err or ""}
     tracer.log("task_end", tid, wall_s=round(time.time() - t_task, 1), grader_stdout=grader_out.strip(),
-               history=[{"role": r, "content": c} for r, c in history],
+               history=[{"role": r, "content": c} for r, c in env],
+               conversation=None if conv == env else [{"role": r, "content": c} for r, c in conv],
                **{k: v for k, v in row.items() if k != "task_id"})
     return row
 
@@ -186,8 +302,10 @@ def load_config(path: str) -> Dict[str, Any]:
     cfg.setdefault("max_tokens", 2048)
     cfg.setdefault("seed", 0)
     cfg.setdefault("num_ctx", 16384)
-    if cfg["mode"] != "basepaper":
-        raise NotImplementedError("mode %r is not implemented yet" % cfg["mode"])
+    if cfg["mode"] not in ("basepaper", "medguardian"):
+        raise NotImplementedError("mode %r is not implemented" % cfg["mode"])
+    if cfg["mode"] == "medguardian":
+        cfg["medguardian"] = MedGuardianConfig.from_dict(cfg.get("medguardian") or {}).as_dict()
     return cfg
 
 
