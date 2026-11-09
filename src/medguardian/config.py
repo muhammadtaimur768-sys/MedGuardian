@@ -9,6 +9,9 @@ class MedGuardianConfig:
     use_typed_tools: bool = True       # filtered/summarised FHIR results, URL normalisation, error hints
     use_calculator: bool = True        # derived facts: age, hours-before-now, in-window flags
     use_order_verifier: bool = True    # pre-POST checks + one repair round; action-format repair
+    # Gap 2 -- process guardian (arms of experiments/run_e4_g2.py)
+    use_timeline_verifier: bool = True  # deterministic timeline audit (off -> the LLM reads the raw record)
+    use_guideline_rag: bool = True      # BM25-retrieved guideline thresholds/excerpts
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> "MedGuardianConfig":

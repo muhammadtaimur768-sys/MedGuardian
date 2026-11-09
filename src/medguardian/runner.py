@@ -153,7 +153,7 @@ def run_task(case: Dict[str, Any], funcs: List[Dict[str, Any]], llm: ChatModel, 
     tid = case["id"]
     fhir_base = cfg["fhir_base"]
     mg = MedGuardianConfig.from_dict(cfg.get("medguardian") or {}) if cfg.get("mode") == "medguardian" \
-        else MedGuardianConfig(False, False, False)
+        else MedGuardianConfig(use_typed_tools=False, use_calculator=False, use_order_verifier=False)
     facts = task_context.parse(case)
     prompt = mab.build_prompt(case, funcs, fhir_base)
     conv: List[Tuple[str, str]] = [("user", prompt)]
