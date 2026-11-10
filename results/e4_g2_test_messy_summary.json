@@ -1,0 +1,15 @@
+{
+  "guardian": {
+    "n_cases": 30,
+    "tp": 14,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "false_alert_rate": 0.0,
+    "severity_weighted_miss_rate": 0.0,
+    "seconds": 0.0,
+    "parse_failures": 0
+  }
+}

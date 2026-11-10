@@ -103,3 +103,21 @@ measured effect. Numbers come from files in `results/` or `logs/` unless stated.
   interval → labs) with a `FINAL:` answer line, written and checked on the 10 dev records only, then frozen.
 - **Effect.** Dev F1 0.0 → 0.44 for both LLM arms (LLM-only P 0.50 / R 0.40; LLM+RAG P 0.31 / R 0.80,
   false-alert rate 0.80; `results/e4_g2_dev_summary.json`). Test re-run once with the frozen prompt.
+
+### 2026-11-10 — Ablations on dev-20: every Gap 1 component carries weight
+- **Observed.** Removing one component at a time from E3 (dev-20, 80.0 %): without typed FHIR tools
+  25.0 % (7/20 tasks hit the round limit, input tokens doubled to 339k); without the calculator 55.0 %
+  (query 100 → 50 %, action unchanged); without the order verifier 60.0 % (query unchanged, action
+  60 → 20 %). The base-paper agent scored 5.0 % on the same 20 tasks (`results/e5_*_dev20_summary.json`,
+  `results/e2_basepaper_dev20_summary.json`).
+- **Change.** None; the ablations were run once with the frozen E3 configuration.
+- **Effect.** The typed tools account for most of the query gain, the calculator for the time-window
+  query tasks, and the verifier for the action gain; the effects line up with the gap each component
+  targets (`paper/tables/ablation.tex`).
+
+### 2026-11-10 — Reliability at temperature 0.7
+- **Observed.** E3 on dev-10 with temperature 0.7 and seeds 0/1/2: 70.0, 90.0 and 60.0 % (mean 73.3,
+  SD 15.3; `results/e6_t0.7_s*_dev10_summary.json`). task10_22 failed under every seed; task2_18 and
+  task9_18 failed under two of three, task6_13 under one.
+- **Change.** None; all headline results use temperature 0, as in the base paper.
+- **Effect.** Reported as a limitation: with sampling, a 10-task run can move by up to 30 points.

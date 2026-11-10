@@ -1,0 +1,34 @@
+task_id,category,kind,status,correct,result,rounds,n_get,n_post,n_post_rejected,n_post_blocked,n_format_repairs,tokens_in,tokens_out,latency_ms,llm_cached_calls,grader_error
+task1_5,task1,query,completed,1,"[""S2703270""]",2,1,0,0,0,0,6822,57,18742.4,0,
+task2_18,task2,query,completed,0,"[""84""]",2,1,0,0,0,0,6810,31,32839.6,0,
+task3_21,task3,action,completed,1,"[""""]",3,0,1,1,0,0,10648,286,71459.6,0,
+task4_4,task4,query,completed,1,[-1],2,1,0,0,0,0,6898,66,20672.7,0,
+task5_24,task5,action,completed,1,"[{""message"": ""No serum magnesium levels found for patient S6549951 in the last 24 hours.""}]",2,1,0,0,0,0,7170,116,43408.8,0,
+task6_13,task6,query,completed,0,[-1],2,1,0,0,0,0,9668,90,94239.4,0,
+task7_11,task7,query,completed,1,[107.0],2,1,0,0,0,0,8536,68,54970.8,0,
+task8_24,task8,action,completed,1,"[""orthopedic surgery referral ordered for patient S3032536.""]",3,0,1,1,0,0,10924,397,115707.4,0,
+task9_18,task9,action,completed,0,"[""3.6"", ""POST http://localhost:8080/fhir/ServiceRequest
+{
+  ""resourceType"": ""ServiceRequest"",
+  ""code"": {
+    ""coding"": [
+      {
+        ""system"": ""http://loinc.org"",
+        ""code"": ""2823-3"",
+        ""display"": ""Serum potassium""
+      }
+    ]
+  },
+  ""authoredOn"": ""2023-11-13T10:15:00+00:00"",
+  ""status"": ""active"",
+  ""intent"": ""order"",
+  ""priority"": ""stat"",
+  ""subject"": {
+    ""reference"": ""Patient/S2450227""
+  },
+  ""occurrenceDateTime"": ""2023-11-14T08:00:00+00:00"",
+  ""note"": {
+    ""text"": ""Ordered to check potassium level and replace if low""
+  }
+}""]",3,1,0,0,0,1,16654,704,248295.4,0,
+task10_22,task10,action,completed,0,[-1],2,1,0,0,0,0,7035,69,26408.0,0,

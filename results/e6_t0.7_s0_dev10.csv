@@ -1,0 +1,11 @@
+task_id,category,kind,status,correct,result,rounds,n_get,n_post,n_post_rejected,n_post_blocked,n_format_repairs,tokens_in,tokens_out,latency_ms,llm_cached_calls,grader_error
+task1_5,task1,query,completed,1,"[""S2703270""]",2,1,0,0,0,0,6779,48,15828.5,0,
+task2_18,task2,query,completed,0,"[""84""]",2,1,0,0,0,0,6810,31,12263.1,0,
+task3_21,task3,action,completed,1,"[""""]",3,0,1,1,0,0,10648,286,91666.0,0,
+task4_4,task4,query,completed,1,[-1],2,1,0,0,0,0,6944,89,25665.1,0,
+task5_24,task5,action,completed,1,"[""No serum magnesium level recorded for patient S6549951 in the last 24 hours.""]",2,1,0,0,0,0,7170,111,33207.0,0,
+task6_13,task6,query,completed,1,[116.1538],2,1,0,0,0,0,9624,75,79036.3,0,
+task7_11,task7,query,completed,1,[107.0],2,1,0,0,0,0,8558,74,56067.3,0,
+task8_24,task8,action,completed,1,"[""""]",3,0,1,1,0,0,10924,380,114526.6,0,
+task9_18,task9,action,completed,0,"[3.6, ""Order for potassium replacement has been created.""]",2,1,0,0,0,0,9840,258,121892.7,0,
+task10_22,task10,action,completed,0,[-1],2,1,0,0,0,0,7006,50,17388.1,0,

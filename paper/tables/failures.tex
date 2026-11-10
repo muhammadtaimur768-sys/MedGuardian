@@ -2,20 +2,21 @@
 \begin{table}[t]
 \centering
 \small
-\caption{Auto-bucketed failure categories on the test split (experiments/failure_analysis.py)}
+\setlength{\tabcolsep}{4pt}
+\caption{Auto-bucketed failure categories on the test split, E3 = MedGuardian, E2 = base-paper agent (experiments/failure_analysis.py)}
 \label{tab:failures}
 \begin{tabular}{llrr}
 \toprule
-System & Failure category & Count & Share of failures \\
+Run & Failure category & $n$ & Share \\
 \midrule
-E3 MedGuardian & answer format & 9 & 47\% \\
-E3 MedGuardian & time window error & 5 & 26\% \\
-E3 MedGuardian & order decision & 5 & 26\% \\
+E3 & answer format & 9 & 47\% \\
+E3 & time window error & 5 & 26\% \\
+E3 & order decision & 5 & 26\% \\
 \midrule
-E2 base-paper agent & round limit & 28 & 60\% \\
-E2 base-paper agent & order payload or value & 10 & 21\% \\
-E2 base-paper agent & order decision & 2 & 4\% \\
-E2 base-paper agent & wrong value & 7 & 15\% \\
+E2 & round limit & 28 & 60\% \\
+E2 & order payload or value & 10 & 21\% \\
+E2 & wrong value & 7 & 15\% \\
+E2 & order decision & 2 & 4\% \\
 \bottomrule
 \end{tabular}
 \end{table}

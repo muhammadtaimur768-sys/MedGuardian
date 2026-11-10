@@ -2,6 +2,7 @@
 \begin{table*}[t]
 \centering
 \small
+\setlength{\tabcolsep}{4pt}
 \caption{Removing one component at a time; G1 on dev-20, G2/G3 on their test sets}
 \label{tab:ablation}
 \begin{tabular}{lcccc}
@@ -9,14 +10,14 @@
 Configuration & Overall SR & Query SR & Action SR & $\Delta$ overall \\
 \midrule
 G1: MedGuardian (all components) & 80.0 & 100.0 & 60.0 & -- \\
-G1: -- typed FHIR tools & 42.9 & 20.0 & 100.0 & -37.1 \\
-G1: -- calculator & -- & -- & -- & -- \\
-G1: -- order verifier & -- & -- & -- & -- \\
-G1: Base-paper agent (all off) & -- & -- & -- & -- \\
+G1: -- typed FHIR tools & 25.0 & 10.0 & 40.0 & -55.0 \\
+G1: -- calculator & 55.0 & 50.0 & 60.0 & -25.0 \\
+G1: -- order verifier & 60.0 & 100.0 & 20.0 & -20.0 \\
+G1: Base-paper agent (all off) & 5.0 & 10.0 & 0.0 & -75.0 \\
 G2: timeline verifier + RAG & \multicolumn{3}{c}{F1 1.00, P 1.00, R 1.00} & -- \\
 G2: -- timeline verifier (LLM + RAG) & \multicolumn{3}{c}{F1 0.00, P 0.00, R 0.00} & -- \\
 G2: -- timeline verifier -- RAG (LLM only) & \multicolumn{3}{c}{F1 0.00, P 0.00, R 0.00} & -- \\
-G2: messy records: guardian & \multicolumn{3}{c}{F1 --, P --, R --} & -- \\
+G2: messy records: guardian & \multicolumn{3}{c}{F1 1.00, P 1.00, R 1.00} & -- \\
 G2: messy records: LLM + RAG & \multicolumn{3}{c}{F1 --, P --, R --} & -- \\
 G2: messy records: LLM only & \multicolumn{3}{c}{F1 --, P --, R --} & -- \\
 G3: fused & \multicolumn{3}{c}{field F1 1.00, BLEU-4 99.3} & -- \\

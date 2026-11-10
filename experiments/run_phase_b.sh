@@ -12,7 +12,6 @@ for f in typed_tools calculator order_verifier; do
   $R --config experiments/configs/e5_no_$f.yaml --split dev --run-name e5_no_${f}_dev20
 done
 $R --config experiments/configs/e2_basepaper.yaml --split dev --run-name e2_basepaper_dev20
-$PY experiments/run_e4_g2.py --split test --arms llm_only llm_rag
 for s in 0 1 2; do
   $R --config experiments/configs/e6_t0.7_s$s.yaml --split dev --per-category 1 --run-name e6_t0.7_s${s}_dev10
 done
