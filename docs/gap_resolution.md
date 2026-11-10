@@ -2,5 +2,5 @@
 | Gap | Method / component | Metric | Base paper result | Our result | Addressed? |
 |---|---|---|---|---|---|
 | Gap 1: action reliability | Typed FHIR tools, calculator, pre-order verifier | Action SR (%), test 50 | 0.0 (E2, reproduced) | 44.0 (E3) | Fully (Δ44.0 pp; H1: >=+15) |
-| Gap 2: process guardian | Timeline verifier + BM25 guideline retrieval | F1, 30 synthetic records | not evaluated (LLM-only arm: 0.00) | 1.00 | Fully (H2: F1>=0.80, Δ>=+0.15) |
+| Gap 2: process guardian | Timeline verifier + BM25 guideline retrieval | F1, 30 synthetic records | not evaluated (LLM-only arm: 0.31) | 1.00 | Fully (H2: F1>=0.80, Δ>=+0.15) |
 | Gap 3: sonography fusion | OCR + ASR + template-constrained fusion | Field F1, 20 synthetic cases | not evaluated (best unimodal: 0.83) | 1.00 | Fully (H3: fused > both) |
