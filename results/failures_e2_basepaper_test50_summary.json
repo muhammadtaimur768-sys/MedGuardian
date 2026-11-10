@@ -1,0 +1,10 @@
+{
+  "run": "e2_basepaper_test50",
+  "n_failed": 47,
+  "counts": {
+    "round_limit": 28,
+    "order_payload_or_value": 10,
+    "order_decision": 2,
+    "wrong_value": 7
+  }
+}

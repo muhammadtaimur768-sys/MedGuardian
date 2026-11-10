@@ -1,0 +1,6 @@
+case_id,voice,asr_wer,gold_conflicts,flagged_conflicts,image_only_correct,image_only_predicted,dictation_only_correct,dictation_only_predicted,fused_correct,fused_predicted,gold_fields
+dev_000,Daniel,0.0,[],[],3,3,6,6,8,8,8
+dev_001,Daniel,0.0286,[],[],3,3,5,5,7,7,7
+dev_002,Moira,0.1795,[],[],4,4,6,6,9,9,9
+dev_003,Samantha,0.0909,[],[],2,2,6,6,7,7,8
+dev_004,Daniel,0.0571,[],[],3,3,6,6,8,8,8

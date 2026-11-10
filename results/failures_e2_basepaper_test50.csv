@@ -1,0 +1,48 @@
+task_id,category,kind,status,failure,rounds
+task1_26,task1,query,completed,wrong_value,2
+task1_4,task1,query,completed,wrong_value,2
+task1_14,task1,query,completed,wrong_value,2
+task2_4,task2,query,completed,wrong_value,2
+task2_25,task2,query,completed,wrong_value,2
+task2_7,task2,query,completed,wrong_value,2
+task2_1,task2,query,completed,wrong_value,2
+task3_28,task3,action,completed,order_payload_or_value,2
+task3_4,task3,action,completed,order_payload_or_value,2
+task3_6,task3,action,completed,order_payload_or_value,2
+task3_26,task3,action,completed,order_payload_or_value,2
+task3_17,task3,action,completed,order_payload_or_value,2
+task4_28,task4,query,task limit reached,round_limit,8
+task4_5,task4,query,task limit reached,round_limit,8
+task4_1,task4,query,task limit reached,round_limit,8
+task4_6,task4,query,task limit reached,round_limit,8
+task4_21,task4,query,task limit reached,round_limit,8
+task5_8,task5,action,task limit reached,round_limit,8
+task5_28,task5,action,task limit reached,round_limit,8
+task5_25,task5,action,task limit reached,round_limit,8
+task5_11,task5,action,task limit reached,round_limit,8
+task5_6,task5,action,task limit reached,round_limit,8
+task6_26,task6,query,task limit reached,round_limit,8
+task6_30,task6,query,task limit reached,round_limit,8
+task6_18,task6,query,task limit reached,round_limit,8
+task6_3,task6,query,task limit reached,round_limit,8
+task6_14,task6,query,task limit reached,round_limit,8
+task7_8,task7,query,task limit reached,round_limit,8
+task7_17,task7,query,task limit reached,round_limit,8
+task7_2,task7,query,task limit reached,round_limit,8
+task7_24,task7,query,task limit reached,round_limit,8
+task7_4,task7,query,task limit reached,round_limit,8
+task8_25,task8,action,completed,order_payload_or_value,2
+task8_17,task8,action,completed,order_payload_or_value,2
+task8_21,task8,action,completed,order_payload_or_value,2
+task8_20,task8,action,completed,order_payload_or_value,2
+task8_4,task8,action,completed,order_payload_or_value,2
+task9_7,task9,action,task limit reached,round_limit,8
+task9_12,task9,action,task limit reached,round_limit,8
+task9_13,task9,action,task limit reached,round_limit,8
+task9_5,task9,action,task limit reached,round_limit,8
+task9_24,task9,action,task limit reached,round_limit,8
+task10_28,task10,action,task limit reached,round_limit,8
+task10_23,task10,action,completed,order_decision,3
+task10_25,task10,action,task limit reached,round_limit,8
+task10_11,task10,action,completed,order_decision,3
+task10_30,task10,action,task limit reached,round_limit,8

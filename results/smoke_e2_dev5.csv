@@ -1,0 +1,6 @@
+task_id,category,kind,status,correct,result,rounds,n_get,n_post,tokens_in,tokens_out,latency_ms,llm_cached_calls,grader_error
+task1_5,task1,query,completed,1,"[""S2703270""]",2,1,0,7420,48,35583.2,0,
+task2_18,task2,query,completed,0,[64],2,1,0,7427,31,9157.4,0,
+task3_21,task3,action,completed,0,"[""""]",2,0,1,6864,144,10335.2,0,
+task4_4,task4,query,task limit reached,0,,8,8,0,32462,685,71558.3,0,
+task5_24,task5,action,task limit reached,0,,8,8,0,33366,685,93285.5,0,

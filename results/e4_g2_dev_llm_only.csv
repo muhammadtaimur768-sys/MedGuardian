@@ -1,0 +1,11 @@
+case_id,drug,bleeding_risk,gold,pred,tp,fp,fn,parsed,tokens_in,tokens_out,seconds
+dev_000,dabigatran,high,[],"[[""hold_too_short"", ""dabigatran""], [""missing_required_lab"", ""inr""]]",0,2,0,1,1331,542,98.86
+dev_001,apixaban,low,"[[""preop_lab_out_of_range"", ""plt""]]","[[""preop_lab_out_of_range"", ""plt""]]",1,0,0,1,1313,543,118.41
+dev_002,clopidogrel,high,"[[""preop_lab_out_of_range"", ""plt""]]","[[""preop_lab_out_of_range"", ""plt""]]",1,0,0,1,1130,583,109.78
+dev_003,clopidogrel,low,"[[""missing_required_lab"", ""plt""]]",[],0,0,1,1,1050,604,112.75
+dev_004,clopidogrel,high,[],[],0,0,0,1,1130,521,262.11
+dev_005,apixaban,high,[],[],0,0,0,1,1314,615,129.37
+dev_006,dabigatran,high,"[[""hold_too_short"", ""dabigatran""]]",[],0,0,1,1,1331,634,146.57
+dev_007,dabigatran,low,[],[],0,0,0,1,1329,490,94.22
+dev_008,edoxaban,low,"[[""restart_too_early"", ""edoxaban""]]",[],0,0,1,1,1315,632,119.87
+dev_009,rivaroxaban,high,[],[],0,0,0,1,1324,611,116.9

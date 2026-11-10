@@ -1,0 +1,34 @@
+{
+  "n": 3,
+  "n_query": 2,
+  "n_action": 1,
+  "overall_sr": 33.33,
+  "query_sr": 50.0,
+  "action_sr": 0.0,
+  "status_counts": {
+    "completed": 3
+  },
+  "by_category": {
+    "task1": 100.0,
+    "task2": 0.0,
+    "task3": 0.0
+  },
+  "tokens_in": 21711,
+  "tokens_out": 223,
+  "llm_seconds_per_task_median": 17.1,
+  "run": "smoke_determinism",
+  "config": {
+    "name": "e2_basepaper",
+    "mode": "basepaper",
+    "model": "medguardian-qwen",
+    "base_url": "http://localhost:11434/v1",
+    "num_ctx": 16384,
+    "temperature": 0,
+    "max_tokens": 2048,
+    "seed": 0,
+    "max_rounds": 8,
+    "fhir_base": "http://localhost:8080/fhir/"
+  },
+  "split": "dev",
+  "finished": "2026-11-10T00:33:19"
+}

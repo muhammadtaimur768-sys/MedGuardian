@@ -43,6 +43,14 @@ def wilson(k, n, z=1.96):
     return 100 * (c - h), 100 * (c + h)
 
 
+def fmt_p(p):
+    """LaTeX-ready p-value for use inside math mode: 0.032 or 7.5\\times10^{-9}."""
+    if p >= 0.001:
+        return "%.3f" % p
+    exp = int(math.floor(math.log10(p)))
+    return "%.1f\\times10^{%d}" % (p / 10 ** exp, exp)
+
+
 def mcnemar_exact(rows_a, rows_b):
     """Exact two-sided McNemar on paired task outcomes. Returns (b, c, p)."""
     a = {r["task_id"]: int(r["correct"]) for r in rows_a}
@@ -100,8 +108,8 @@ def main_results():
     if e2 and e3:
         b, c, p = mcnemar_exact(e2, e3)
         body.append("\\midrule")
-        body.append("\\multicolumn{7}{l}{E2 vs E3, exact McNemar: %d tasks only E2 solved, %d only E3 solved, $p=%.3g$}"
-                    % (b, c, p))
+        body.append("\\multicolumn{7}{l}{E2 vs E3, exact McNemar: %d tasks only E2 solved, %d only E3 solved, $p=%s$}"
+                    % (b, c, fmt_p(p)))
     table("main_results", "llrrcrr", "System & Source & $n$ & Overall SR & 95\\% CI & Query SR & Action SR", body,
           "success rates (%) of base-paper reported models vs our reproduced runs; CI = Wilson", wide=True)
 
@@ -259,7 +267,7 @@ def numbers():
     e2, e3 = load_csv("e2_basepaper_test50.csv"), load_csv("e3_medguardian_test50.csv")
     if e2 and e3:
         b, c, p = mcnemar_exact(e2, e3)
-        m.update({"McNemarOnlyEtwo": str(b), "McNemarOnlyEthree": str(c), "McNemarP": "%.3g" % p,
+        m.update({"McNemarOnlyEtwo": str(b), "McNemarOnlyEthree": str(c), "McNemarP": fmt_p(p),
                   "ActionDeltaPP": "%+.1f" % (sr(e3, "action") - sr(e2, "action")),
                   "OverallDeltaPP": "%+.1f" % (sr(e3) - sr(e2))})
     for split, tag in (("test", "Gtwo"), ("test_messy", "GtwoMessy")):

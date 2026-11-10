@@ -14,9 +14,11 @@ Llama 3.3 70B & reported & 300 & 46.33 & -- & 50.00 & 42.67 \\
 Mistral v0.3 7B & reported & 300 & 4.00 & -- & 8.00 & 0.00 \\
 \midrule
 E0 Mistral-7B v0.3 (base-paper agent) & reproduced & 20 & 5.0 & [0.9, 23.6] & 10.0 & 0.0 \\
-E1 Qwen2.5-7B single call & reproduced & -- & -- & -- & -- & -- \\
-E2 Qwen2.5-7B base-paper agent & reproduced & 37 & 8.1 & [2.8, 21.3] & 12.0 & 0.0 \\
-E3 Qwen2.5-7B MedGuardian & reproduced & -- & -- & -- & -- & -- \\
+E1 Qwen2.5-7B retrieve-then-answer (non-agentic) & reproduced & 50 & 32.0 & [20.8, 45.8] & 24.0 & 40.0 \\
+E2 Qwen2.5-7B base-paper agent & reproduced & 50 & 6.0 & [2.1, 16.2] & 12.0 & 0.0 \\
+E3 Qwen2.5-7B MedGuardian & reproduced & 50 & 62.0 & [48.2, 74.1] & 80.0 & 44.0 \\
+\midrule
+\multicolumn{7}{l}{E2 vs E3, exact McNemar: 0 tasks only E2 solved, 28 only E3 solved, $p=7.5\times10^{-9}$} \\
 \bottomrule
 \end{tabular}
 \end{table*}

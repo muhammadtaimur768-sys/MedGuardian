@@ -1,0 +1,31 @@
+case_id,drug,bleeding_risk,gold,pred,tp,fp,fn,parsed,tokens_in,tokens_out,seconds
+test_000,dabigatran,high,"[[""preop_lab_out_of_range"", ""plt""]]",[],0,0,1,1,1500,2,26.26
+test_001,apixaban,low,[],[],0,0,0,1,1499,2,24.56
+test_002,rivaroxaban,high,"[[""preop_lab_out_of_range"", ""plt""]]",[],0,0,1,1,1492,2,24.26
+test_003,clopidogrel,high,"[[""hold_too_short"", ""clopidogrel""]]",[],0,0,1,1,1296,2,20.46
+test_004,dabigatran,low,[],[],0,0,0,1,1499,2,19.86
+test_005,dabigatran,low,"[[""preop_lab_out_of_range"", ""plt""]]",[],0,0,1,1,1497,2,19.92
+test_006,clopidogrel,low,[],[],0,0,0,1,1294,2,16.77
+test_007,dabigatran,high,"[[""hold_too_short"", ""dabigatran""], [""restart_too_early"", ""dabigatran""]]",[],0,0,2,1,1501,2,20.58
+test_008,edoxaban,low,"[[""hold_too_short"", ""edoxaban""], [""restart_too_early"", ""edoxaban""]]",[],0,0,2,1,1484,2,24.83
+test_009,rivaroxaban,high,[],[],0,0,0,1,1490,2,20.51
+test_010,edoxaban,low,"[[""missing_required_lab"", ""plt""]]",[],0,0,1,1,1484,2,20.56
+test_011,edoxaban,high,[],[],0,0,0,1,1481,2,20.41
+test_012,rivaroxaban,high,[],[],0,0,0,1,1492,2,20.53
+test_013,edoxaban,high,"[[""hold_too_short"", ""edoxaban""]]",[],0,0,1,1,1483,2,20.62
+test_014,edoxaban,low,[],[],0,0,0,1,1484,2,20.86
+test_015,apixaban,high,[],[],0,0,0,1,1504,2,20.73
+test_016,apixaban,low,[],[],0,0,0,1,1500,2,20.54
+test_017,rivaroxaban,low,[],[],0,0,0,1,1490,2,20.3
+test_018,apixaban,low,[],[],0,0,0,1,1501,2,20.22
+test_019,rivaroxaban,low,[],[],0,0,0,1,1494,2,20.08
+test_020,dabigatran,low,[],[],0,0,0,1,1503,2,20.93
+test_021,warfarin,low,"[[""hold_too_short"", ""warfarin""]]",[],0,0,1,1,1363,2,22.04
+test_022,dabigatran,low,[],[],0,0,0,1,1499,2,20.72
+test_023,dabigatran,high,"[[""hold_too_short"", ""dabigatran""]]",[],0,0,1,1,1500,2,20.46
+test_024,clopidogrel,low,[],[],0,0,0,1,1299,2,16.63
+test_025,warfarin,low,"[[""missing_required_lab"", ""plt""]]",[],0,0,1,1,1283,2,16.36
+test_026,clopidogrel,high,[],[],0,0,0,1,1297,2,16.64
+test_027,clopidogrel,low,"[[""preop_lab_out_of_range"", ""plt""]]",[],0,0,1,1,1298,2,16.47
+test_028,clopidogrel,low,[],[],0,0,0,1,1294,2,16.87
+test_029,clopidogrel,high,[],[],0,0,0,1,1298,2,16.35

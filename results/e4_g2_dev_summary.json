@@ -1,0 +1,28 @@
+{
+  "llm_only": {
+    "n_cases": 10,
+    "tp": 2,
+    "fp": 2,
+    "fn": 3,
+    "precision": 0.5,
+    "recall": 0.4,
+    "f1": 0.4444,
+    "false_alert_rate": 0.2,
+    "severity_weighted_miss_rate": 0.5385,
+    "seconds": 1308.9,
+    "parse_failures": 0
+  },
+  "llm_rag": {
+    "n_cases": 10,
+    "tp": 4,
+    "fp": 9,
+    "fn": 1,
+    "precision": 0.3077,
+    "recall": 0.8,
+    "f1": 0.4444,
+    "false_alert_rate": 0.8,
+    "severity_weighted_miss_rate": 0.1538,
+    "seconds": 1201.4,
+    "parse_failures": 0
+  }
+}

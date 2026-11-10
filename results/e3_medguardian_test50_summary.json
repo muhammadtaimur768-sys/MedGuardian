@@ -1,0 +1,50 @@
+{
+  "n": 50,
+  "n_query": 25,
+  "n_action": 25,
+  "overall_sr": 62.0,
+  "query_sr": 80.0,
+  "action_sr": 44.0,
+  "status_counts": {
+    "completed": 50
+  },
+  "by_category": {
+    "task1": 100.0,
+    "task2": 100.0,
+    "task3": 100.0,
+    "task4": 40.0,
+    "task5": 20.0,
+    "task6": 60.0,
+    "task7": 100.0,
+    "task8": 100.0,
+    "task9": 0.0,
+    "task10": 0.0
+  },
+  "tokens_in": 433317,
+  "tokens_out": 8018,
+  "llm_seconds_per_task_median": 92.6,
+  "run": "e3_medguardian_test50",
+  "config": {
+    "name": "e3_medguardian",
+    "mode": "medguardian",
+    "model": "medguardian-qwen",
+    "base_url": "http://localhost:11434/v1",
+    "num_ctx": 16384,
+    "temperature": 0,
+    "max_tokens": 2048,
+    "seed": 0,
+    "max_rounds": 8,
+    "fhir_base": "http://localhost:8080/fhir/",
+    "medguardian": {
+      "use_typed_tools": true,
+      "use_calculator": true,
+      "use_order_verifier": true,
+      "use_timeline_verifier": true,
+      "use_guideline_rag": true,
+      "use_image_ocr": true,
+      "use_dictation_asr": true
+    }
+  },
+  "split": "test",
+  "finished": "2026-11-10T06:28:08"
+}
