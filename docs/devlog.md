@@ -102,7 +102,9 @@ measured effect. Numbers come from files in `results/` or `logs/` unless stated.
 - **Change.** Step-by-step prompt (procedure times → last/first dose gaps in hours → compare with
   interval → labs) with a `FINAL:` answer line, written and checked on the 10 dev records only, then frozen.
 - **Effect.** Dev F1 0.0 → 0.44 for both LLM arms (LLM-only P 0.50 / R 0.40; LLM+RAG P 0.31 / R 0.80,
-  false-alert rate 0.80; `results/e4_g2_dev_summary.json`). Test re-run once with the frozen prompt.
+  false-alert rate 0.80; `results/e4_g2_dev_summary.json`). Test re-run once with the frozen prompt: LLM-only F1 0.31
+  (P 0.33 / R 0.29), LLM+RAG F1 0.33 (P 0.23 / R 0.57, false-alert rate 0.72), deterministic guardian
+  F1 1.00 (`results/e4_g2_test_summary.json`). Retrieval raised recall but mostly added false alerts.
 
 ### 2026-11-10 — Ablations on dev-20: every Gap 1 component carries weight
 - **Observed.** Removing one component at a time from E3 (dev-20, 80.0 %): without typed FHIR tools
@@ -121,3 +123,11 @@ measured effect. Numbers come from files in `results/` or `logs/` unless stated.
   task9_18 failed under two of three, task6_13 under one.
 - **Change.** None; all headline results use temperature 0, as in the base paper.
 - **Effect.** Reported as a limitation: with sampling, a 10-task run can move by up to 30 points.
+
+### 2026-11-10 — Gap 2 on messy records (brand names, free-text dosing, shuffled order)
+- **Observed.** On the 30 messy test records the deterministic guardian kept F1 1.00 (14/14, no false
+  alerts); the frozen-prompt LLM arms scored F1 0.26 (LLM only) and 0.34 (LLM + RAG, false-alert rate
+  0.72; `results/e4_g2_test_messy_summary.json`).
+- **Change.** None; brand-name resolution and bleeding-risk inference were already in the guardian.
+- **Effect.** The guardian's advantage over the LLM arms is the same on clean and messy records, so it
+  does not come from the clean records' regular format.

@@ -11,5 +11,31 @@
     "severity_weighted_miss_rate": 0.0,
     "seconds": 0.0,
     "parse_failures": 0
+  },
+  "llm_only": {
+    "n_cases": 30,
+    "tp": 4,
+    "fp": 13,
+    "fn": 10,
+    "precision": 0.2353,
+    "recall": 0.2857,
+    "f1": 0.2581,
+    "false_alert_rate": 0.4444,
+    "severity_weighted_miss_rate": 0.6757,
+    "seconds": 3484.6,
+    "parse_failures": 0
+  },
+  "llm_rag": {
+    "n_cases": 30,
+    "tp": 8,
+    "fp": 25,
+    "fn": 6,
+    "precision": 0.2424,
+    "recall": 0.5714,
+    "f1": 0.3404,
+    "false_alert_rate": 0.7222,
+    "severity_weighted_miss_rate": 0.4324,
+    "seconds": 4053.4,
+    "parse_failures": 0
   }
 }

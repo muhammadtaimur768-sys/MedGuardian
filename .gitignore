@@ -25,3 +25,6 @@ refsol.py
 logs/*.jsonl
 logs/*.jsonl.prev
 !logs/samples/
+
+# build output (submitted separately)
+paper/main.pdf

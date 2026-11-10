@@ -1,0 +1,31 @@
+case_id,drug,bleeding_risk,gold,pred,tp,fp,fn,parsed,tokens_in,tokens_out,seconds
+messy_000,dabigatran,high,"[[""preop_lab_out_of_range"", ""plt""]]","[[""preop_lab_out_of_range"", ""plt""]]",1,0,0,1,1368,662,127.36
+messy_001,apixaban,low,[],[],0,0,0,1,1338,669,120.94
+messy_002,rivaroxaban,high,"[[""preop_lab_out_of_range"", ""plt""]]","[[""preop_lab_out_of_range"", ""plt""]]",1,0,0,1,1360,798,138.62
+messy_003,clopidogrel,high,"[[""hold_too_short"", ""clopidogrel""]]",[],0,0,1,1,1152,540,99.75
+messy_004,dabigatran,low,[],"[[""hold_too_short"", ""dabigatran""], [""restart_too_early"", ""dabigatran""]]",0,2,0,1,1367,613,114.56
+messy_005,dabigatran,low,"[[""preop_lab_out_of_range"", ""plt""]]",[],0,0,1,1,1365,597,111.69
+messy_006,clopidogrel,low,[],"[[""hold_too_short"", ""clopidogrel""], [""preop_lab_out_of_range"", ""plt""]]",0,2,0,1,1150,612,109.79
+messy_007,dabigatran,high,"[[""hold_too_short"", ""dabigatran""], [""restart_too_early"", ""dabigatran""]]","[[""hold_too_short"", ""dabigatran""]]",1,0,1,1,1369,534,101.76
+messy_008,edoxaban,low,"[[""hold_too_short"", ""edoxaban""], [""restart_too_early"", ""edoxaban""]]",[],0,0,2,1,1361,568,107.66
+messy_009,rivaroxaban,high,[],[],0,0,0,1,1358,753,136.27
+messy_010,edoxaban,low,"[[""missing_required_lab"", ""plt""]]",[],0,0,1,1,1361,581,109.97
+messy_011,edoxaban,high,[],[],0,0,0,1,1349,485,95.45
+messy_012,rivaroxaban,high,[],[],0,0,0,1,1351,694,126.11
+messy_013,edoxaban,high,"[[""hold_too_short"", ""edoxaban""]]",[],0,0,1,1,1360,628,118.34
+messy_014,edoxaban,low,[],"[[""hold_too_short"", ""edoxaban""]]",0,1,0,1,1361,773,140.53
+messy_015,apixaban,high,[],[],0,0,0,1,1352,736,133.75
+messy_016,apixaban,low,[],[],0,0,0,1,1348,612,115.22
+messy_017,rivaroxaban,low,[],[],0,0,0,1,1349,556,106.18
+messy_018,apixaban,low,[],"[[""hold_too_short"", ""apixaban""]]",0,1,0,1,1340,555,105.76
+messy_019,rivaroxaban,low,[],[],0,0,0,1,1353,774,139.29
+messy_020,dabigatran,low,[],[],0,0,0,1,1380,605,114.13
+messy_021,warfarin,low,"[[""hold_too_short"", ""warfarin""]]","[[""preop_lab_out_of_range"", ""inr""]]",0,1,1,1,1223,707,127.11
+messy_022,dabigatran,low,[],"[[""missing_required_lab"", ""inr""]]",0,1,0,1,1367,673,124.02
+messy_023,dabigatran,high,"[[""hold_too_short"", ""dabigatran""]]",[],0,0,1,1,1377,546,106.34
+messy_024,clopidogrel,low,[],"[[""hold_too_short"", ""clopidogrel""]]",0,1,0,1,1149,678,121.32
+messy_025,warfarin,low,"[[""missing_required_lab"", ""plt""]]","[[""preop_lab_out_of_range"", ""inr""]]",0,1,1,1,1137,723,127.48
+messy_026,clopidogrel,high,[],"[[""hold_too_short"", ""clopidogrel""]]",0,1,0,1,1153,571,104.02
+messy_027,clopidogrel,low,"[[""preop_lab_out_of_range"", ""plt""]]","[[""hold_too_short"", ""clopidogrel""], [""preop_lab_out_of_range"", ""plt""]]",1,1,0,1,1154,558,102.78
+messy_028,clopidogrel,low,[],[],0,0,0,1,1150,456,87.08
+messy_029,clopidogrel,high,[],"[[""missing_required_lab"", ""inr""]]",0,1,0,1,1148,623,111.28
