@@ -16,6 +16,23 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from .task_context import TaskFacts
 
 MAX_PAGES = 20
+MAX_ROWS = 30  # resources shown to the model; the calculator always uses every resource
+
+
+def repaired_code_url(url: str, facts: "TaskFacts") -> Optional[Tuple[str, str]]:
+    """If an Observation search uses the task's ORDERING code (e.g. LOINC 2823-3) or another code the
+    EHR does not use, return the same search with the lab code the task text names, plus a note."""
+    if "/Observation" not in url or len(facts.lab_codes) != 1:
+        return None
+    parts = urlsplit(url)
+    params = parse_qsl(parts.query.replace("+", "%2B"), keep_blank_values=True)
+    (name, lab), = facts.lab_codes.items()
+    code = dict(params).get("code")
+    if not code or code == lab:
+        return None
+    fixed = [(k, lab if k == "code" else v) for k, v in params]
+    note = 'code=%s returned nothing; searched code=%s, which the task text gives as the code for %s' % (code, lab, name)
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(fixed, safe=":/"), "")), note
 
 
 # -- URL handling --------------------------------------------------------------------------
@@ -178,7 +195,10 @@ def summarise(bundle: Dict[str, Any], facts: TaskFacts, use_calculator: bool) ->
         return d.timestamp() if d else -math.inf
 
     rows.sort(key=when, reverse=True)
-    out: Dict[str, Any] = {"total": len(rows), "resources_newest_first": rows}
+    out: Dict[str, Any] = {"total": len(rows), "resources_newest_first": rows[:MAX_ROWS]}
+    if len(rows) > MAX_ROWS:
+        out["note"] = "showing the newest %d of %d resources; calculator values below cover all %d" % (
+            MAX_ROWS, len(rows), len(rows))
     obs = [r for r in rows if r["resourceType"] == "Observation" and isinstance(r.get("value"), (int, float))]
     if use_calculator and obs:
         stats: Dict[str, Any] = {"latest_value": obs[0]["value"], "latest_time": obs[0].get("effectiveDateTime")}

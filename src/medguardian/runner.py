@@ -205,6 +205,13 @@ def run_task(case: Dict[str, Any], funcs: List[Dict[str, Any]], llm: ChatModel, 
                 if mg.use_typed_tools:
                     url, notes = fhir_summary.normalise_url(arg, drop_date_filters=mg.use_calculator)
                     bundle, err = fhir_summary.fetch_all(fhir.get, url)
+                    if err is None and not bundle.get("entry"):
+                        repaired = fhir_summary.repaired_code_url(url, facts)
+                        if repaired:  # deterministic query repair: search the code the task names
+                            b2, e2 = fhir_summary.fetch_all(fhir.get, repaired[0])
+                            if e2 is None and b2.get("entry"):
+                                url, bundle = repaired[0], b2
+                                notes.append(repaired[1])
                     if err is None:
                         summary = fhir_summary.summarise(bundle, facts, mg.use_calculator)
                         if notes:

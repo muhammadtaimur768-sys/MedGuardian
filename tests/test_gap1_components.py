@@ -233,3 +233,19 @@ def test_only_the_first_get_is_executed(tmp_path, graded):
 def test_single_call_splits_posts_and_finish():
     acts = runner.split_actions('Plan:\nPOST http://h/fhir/MedicationRequest\n{"a": 1}\nFINISH([3.1])')
     assert [k for k, _ in acts] == ["POST", "FINISH"] and acts[0][1].endswith('{"a": 1}')
+
+
+def test_ordering_code_is_repaired_to_the_task_lab_code():
+    f = tc.parse({"id": "task9_1", "instruction": "Check patient S1's most recent potassium level.",
+                  "context": "It's 2023-11-13T10:15:00+00:00 now. The code for potassium is \"K\". The LOINC code for serum potassium level is 2823-3."})
+    url, note = fs.repaired_code_url("http://h/fhir/Observation?code=2823-3&patient=S1&_format=json", f)
+    assert "code=K" in url and "2823-3" in note
+    assert fs.repaired_code_url("http://h/fhir/Observation?code=K&patient=S1", f) is None
+
+
+def test_long_results_are_capped_but_the_calculator_sees_everything():
+    f = tc.parse(MG_CASE)
+    many = bundle(*[obs(1.0 + i / 100, "2023-11-13T%02d:00:00+00:00" % (i % 10)) for i in range(45)])
+    s = fs.summarise(many, f, True)
+    assert len(s["resources_newest_first"]) == fs.MAX_ROWS and s["total"] == 45 and "note" in s
+    assert s["calculator"]["count_in_window"] == 45

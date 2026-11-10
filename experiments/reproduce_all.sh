@@ -27,7 +27,7 @@ for s in 0 1 2; do
   $R --config experiments/configs/e6_t0.7_s$s.yaml --split dev --per-category 1 --run-name e6_t0.7_s${s}_dev10
 done
 
-$PY experiments/run_e4_g2.py --split test_messy
+$PY experiments/run_e4_g2.py --split test_messy --arms guardian
 $PY experiments/failure_analysis.py e3_medguardian_test50 e2_basepaper_test50
 $PY experiments/make_tables.py
 $PY experiments/make_figures.py

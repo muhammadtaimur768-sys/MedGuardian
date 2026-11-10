@@ -43,8 +43,20 @@ Below is the patient's record as FHIR resources (JSON). Find every process discr
 Record:
 {record}
 
-Answer with ONLY a JSON list, one object per discrepancy, e.g. [{{"type": "hold_too_short", "item": "apixaban"}}].
-"item" is the drug name for interval problems and the lab code (INR or PLT) for lab problems. Answer [] if there are none."""
+Work step by step before answering:
+1. Find the procedure, its start and end time, and its bleeding risk.
+2. For each drug, find the last dose BEFORE the procedure start and the first dose AFTER the procedure end;
+   compute both gaps in hours.
+3. Compare each gap with the minimum interval for that drug and bleeding risk{rule_source}.
+4. For each required pre-operative lab (PLT for every patient; INR for warfarin), find the latest value before
+   the procedure, check it is recent enough and within range.
+Then write a final line starting with FINAL: followed by a JSON list, one object per discrepancy, e.g.
+FINAL: [{{"type": "hold_too_short", "item": "apixaban"}}]
+"item" is the drug name for interval problems and the lab code (INR or PLT) for lab problems. Use FINAL: [] only
+if every check passed."""
+# Revision note (2026-11-10): the first version asked for "ONLY a JSON list ... Answer [] if there are none";
+# Qwen2.5-7B answered [] for all 30 test records (results/e4_g2_test_v1_summary.json). The step-by-step prompt
+# above was then written and checked on the dev split only, and the test split re-run once.
 
 
 def compact_record(bundle):
@@ -72,6 +84,8 @@ def guideline_text(bundle):
 
 
 def parse_flags(text):
+    if "FINAL:" in text:
+        text = text.rsplit("FINAL:", 1)[1]
     m = re.search(r"\[.*\]", text, re.S)
     if not m:
         return [], False
@@ -125,7 +139,7 @@ def main():
     args = ap.parse_args()
     cases = [json.loads(l) for l in open(os.path.join(ROOT, "data", "gap2", args.split + ".jsonl"))]
     cases = cases[:args.limit] if args.limit else cases
-    llm = ChatModel(MODEL, temperature=args.temperature, seed=args.seed, max_tokens=512)
+    llm = ChatModel(MODEL, temperature=args.temperature, seed=args.seed, max_tokens=1536)
     tag = "" if args.temperature == 0 else "_t%g_s%d" % (args.temperature, args.seed)
     summary_path = os.path.join(ROOT, "results", "e4_g2_%s%s_summary.json" % (args.split, tag))
     summary = json.load(open(summary_path)) if os.path.exists(summary_path) else {}
@@ -141,7 +155,8 @@ def main():
                 flags, parsed, raw, toks = audit(c["bundle"]), True, None, (0, 0)
             else:
                 prompt = PROMPT.format(record=compact_record(c["bundle"]),
-                                       guidelines=guideline_text(c["bundle"]) if arm == "llm_rag" else "")
+                                       guidelines=guideline_text(c["bundle"]) if arm == "llm_rag" else "",
+                                       rule_source=" given in the guideline excerpts" if arm == "llm_rag" else " (use your clinical knowledge)")
                 res = llm.chat([{"role": "user", "content": prompt}])
                 flags, parsed = parse_flags(res.content)
                 raw, toks = res.content, (res.tokens_in, res.tokens_out)
