@@ -113,6 +113,8 @@ re-query the model. Temperature-0 runs were checked to be byte-identical across 
 
 ## Changes since Phase 1
 
+No written supervisor feedback was received on Phase 1; the base paper and the three research gaps are unchanged.
+
 | Change | Reason |
 |---|---|
 | All inference local (Ollama, Qwen2.5-7B / Mistral-7B) instead of hosted Gemini/Groq | Zero budget; Groq lists Llama-3.3-70B as deprecated and its free token cap is far below the ~3–4 M tokens E2+E3 need |
