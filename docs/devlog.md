@@ -91,7 +91,10 @@ measured effect. Numbers come from files in `results/` or `logs/` unless stated.
 - **Change.** Deterministic query repair: an empty Observation search by a code other than the one the
   task names is re-run with the named lab code (reported to the model). Results are capped at the
   newest 30 resources; the calculator still uses all of them.
-- **Effect.** See the E3 dev round-3 entry (`results/e3_medguardian_dev20_summary.json`).
+- **Effect.** 75.0 % → **80.0 %** on dev-20 (query 90 → 100 %, action 60 → 60 %; no context overflow;
+  `results/e3_medguardian_dev20_summary.json`). The 4 remaining dev failures (potassium and HbA1c tasks)
+  are answer-format and order-decision differences whose expected form is not stated in the task text;
+  tuning stopped here to avoid fitting the grader. E3 was then run once on the test split.
 
 ### 2026-11-10 — Gap 2 LLM baseline answered [] for every record
 - **Observed.** With a "JSON only, answer [] if none" prompt, Qwen2.5-7B returned `[]` for all 30 test
