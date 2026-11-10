@@ -29,5 +29,6 @@ done
 
 $PY experiments/run_e4_g2.py --split test_messy --arms guardian
 $PY experiments/failure_analysis.py e3_medguardian_test50 e2_basepaper_test50
+$PY experiments/export_samples.py
 $PY experiments/make_tables.py
 $PY experiments/make_figures.py
